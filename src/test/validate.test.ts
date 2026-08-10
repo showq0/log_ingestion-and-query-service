@@ -8,22 +8,22 @@ describe("validate", () => {
                 "timestamp": "1609459200",
                 "service": "api",
                 "level": "info",
-                "message": "hola",
+                "message": "hola"
             },
             {
-                "timestamp": new Date().toISOString(),
+                "timestamp": "2026-07-20T14:32:01.123Z",
                 "service": "api",
-                "level": "info",
+                "level": "info"
             },
             {
-                "timestamp": new Date().toISOString(),
-                "service": "api",
+                "timestamp": "2026-07-20T14:32:01.123Z",
+                "service": "api"
             },
             {
                 "timestamp": "Friday, January 1, 2021 12:00 AM PST",
                 "level": "info",
                 "service": "api",
-                "message": "hello",
+                "message": "hello"
             },
             {
                 "timestamp": "2026-07-20T14:32:01.123Z",
@@ -35,8 +35,8 @@ describe("validate", () => {
                     "region": "eu-west",
                     "retries": 3
                 }
-            },
-        ];
+            }
+        ]
 
         const result = validateLogs(logs);
         console.log(result.valid);

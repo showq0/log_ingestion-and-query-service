@@ -1,5 +1,5 @@
 import {
-    bigint,
+    uuid,
     jsonb,
     pgTable,
     text,
@@ -7,7 +7,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const logs = pgTable("logs", {
-    id: bigint("id", { mode: "number" }).primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
 
     timestamp: timestamp("timestamp").notNull().defaultNow(),
 

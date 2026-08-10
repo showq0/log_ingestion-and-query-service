@@ -1,3 +1,4 @@
+import { NewLog } from "./db/schema.js";
 type LogEntry = {
     timestamp: string;
     level: "debug" | "info" | "warn" | "error";
@@ -7,28 +8,28 @@ type LogEntry = {
 };
 
 type InvalidLog = {
-    log: unknown;
-    errors: string[];
+    index: number;
+    reason: string;
 };
 
 type ValidationResult = {
-    valid: LogEntry[];
+    valid: NewLog[];
     invalid: InvalidLog[];
 };
 
 const VALID_LEVELS = new Set(["debug", "info", "warn", "error"]);
 
 export function validateLogs(logs: unknown[]): ValidationResult {
-    const valid: LogEntry[] = [];
+    const valid: NewLog[] = [];
     const invalid: InvalidLog[] = [];
-
+    let index = 0;
     for (const log of logs) {
+        index++;
         const errors: string[] = [];
-
         if (typeof log !== "object" || log === null || Array.isArray(log)) {
             invalid.push({
-                log,
-                errors: ["Log entry must be an object"],
+                index,
+                reason: "The request does not match the expected top-level structure",
             });
             continue;
         }
@@ -91,11 +92,12 @@ export function validateLogs(logs: unknown[]): ValidationResult {
 
         if (errors.length > 0) {
             invalid.push({
-                log,
-                errors,
+                index,
+                reason: errors.join(", "),
             });
         } else {
-            valid.push(entry as LogEntry); // trust: treat entry as a LogEntry."
+            const log = toNewLog(entry as LogEntry)// trust: treat entry as a LogEntry."
+            valid.push(log);
         }
     }
 
@@ -112,4 +114,15 @@ function isValidISO8601Timestamp(value: string): boolean {
     }
 
     return !Number.isNaN(new Date(value).getTime());
+}
+
+
+function toNewLog(entry: LogEntry): NewLog {
+    return {
+        timestamp: new Date(entry.timestamp),
+        level: entry.level,
+        serviceName: entry.service,
+        message: entry.message,
+        attributes: entry.attributes,
+    };
 }
