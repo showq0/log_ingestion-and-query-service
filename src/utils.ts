@@ -1,4 +1,22 @@
 import { NewLog } from "./db/schema.js";
+
+import { z } from "zod";
+
+
+const logQuerySchema = z.object({
+    service: z.string().optional(),
+    level: z.literal(["debug", "info", "warn", "error"]).optional(),
+    since: z.iso.datetime().optional(),
+    until: z.iso.datetime().optional(),
+    q: z.string().optional(),
+
+    limit: z.string().regex(/^\d+$/, "limit must be a number").transform(Number).refine((value) => value <= 1000, {
+        message: "limit must be less than  1000",
+    }).optional(),
+    cursor: z.string().optional(),
+});
+
+
 type LogEntry = {
     timestamp: string;
     level: "debug" | "info" | "warn" | "error";
@@ -124,5 +142,48 @@ function toNewLog(entry: LogEntry): NewLog {
         serviceName: entry.service,
         message: entry.message,
         attributes: entry.attributes,
+    };
+}
+
+
+type Cursor = {
+    timestamp: string;
+    id: string;
+};
+
+export function encodeCursor(cursor: Cursor): string {
+    return Buffer
+        .from(JSON.stringify(cursor))
+        .toString("base64url");
+}
+
+export function decodeCursor(cursor: string): Cursor {
+    return JSON.parse(
+        Buffer.from(cursor, "base64url").toString("utf-8")
+    );
+}
+
+export function validateQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string } {
+    // addition handle untile since with others 
+    const queryParameter = logQuerySchema.safeParse(entryQueryParameter);
+    if (queryParameter.success) {
+        if (queryParameter.data.since && queryParameter.data.until) {
+            if (queryParameter.data.since > queryParameter.data.until) {
+                return { success: true, error: "until must be later than since" };
+            }
+            else
+                return { success: true };
+        }
+        return { success: true };
+    }
+
+    const errors = JSON.parse(queryParameter.error.message);
+
+    return {
+        success: false,
+        error: errors.map((error: { path: string[]; message: string }) => ({
+            path: error.path.join("."),
+            message: error.message,
+        }))
     };
 }

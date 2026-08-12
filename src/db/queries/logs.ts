@@ -1,5 +1,8 @@
 import { db } from "../index.js";
 import { NewLog, logs } from "../schema.js";
+import { and, SQL, desc, lt, or, eq, lte } from "drizzle-orm";
+import { decodeCursor, encodeCursor } from "../../utils.js";
+const PAGE_DEFAULT = 100;
 
 export async function createLog(log: NewLog) {
     const [result] = await db
@@ -16,4 +19,39 @@ export async function createLogs(logEntries: NewLog[]) {
         .values(logEntries)
         .onConflictDoNothing()
         .returning();
+}
+
+export async function filterLogs(conditions: SQL[], limit?: number) {
+    //where limit (undefined)returns 100 
+    const query_limit = limit ?? PAGE_DEFAULT
+
+    const result = await db
+        .select()
+        .from(logs)
+        .where(
+            conditions.length > 0
+                ? and(...conditions)
+                : undefined,
+        )
+        .orderBy(
+            desc(logs.timestamp),
+        ).limit(query_limit + 1);
+
+    const hasNextPage = result.length > query_limit;
+    // remove extra row
+    const logsResult = result.slice(0, query_limit);
+
+    // create next curser by using the last id element 
+    // the info should encoded
+    const nextCursor = hasNextPage
+        ? encodeCursor({
+            id: logsResult[logsResult.length - 1].id,
+            timestamp: logsResult[logsResult.length - 1].timestamp.toISOString(),
+        })
+        : null;
+
+    return {
+        logs: logsResult,
+        next_cursor: nextCursor,
+    };
 }

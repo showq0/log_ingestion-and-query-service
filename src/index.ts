@@ -2,11 +2,12 @@ import express from "express";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { validateLogs } from "./utils.js"
+import { validateLogs, validateQueryParameter } from "./utils.js"
 import { config } from "./config.js";
-import { createLogs } from "./db/queries/logs.js"
+import { createLogs, filterLogs } from "./db/queries/logs.js"
 import { Request, Response } from "express"
-
+import { cosineDistance } from "drizzle-orm";
+import { createLogConditions } from "./db/utils.js"
 const migrationClient = postgres(config.db.url, { max: 1 });
 
 try {
@@ -26,6 +27,8 @@ app.use(express.static("."));
 
 app.get("/health", healthHandler);
 app.post("/logs", createLogsHandler);
+
+app.get("/logs", queryLogsHandler);
 
 
 
@@ -53,6 +56,24 @@ async function createLogsHandler(req: Request, res: Response) {
     return res.status(201).json({
         accepted: result.valid.length,
         rejected: result.invalid
+    });
+}
+async function queryLogsHandler(req: Request, res: Response) {
+    const obj = req.query
+    let limit;
+    if (obj.limit) {
+        limit = Number(obj.limit)
+    }
+    const logsValidate = validateQueryParameter(obj)
+    if (!logsValidate.success) {
+        res.status(200).json({
+            "error": logsValidate.error,
+        });
+    }
+    const conditions = createLogConditions(obj) || undefined;
+    const result = await filterLogs(conditions, limit);
+    res.status(200).json({
+        result: result,
     });
 }
 
