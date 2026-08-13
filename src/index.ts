@@ -2,12 +2,13 @@ import express from "express";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { validateLogs, validateQueryParameter } from "./utils.js"
+import { validateLogs, validateQueryParameter, validateAggQueryParameter } from "./utils.js"
 import { config } from "./config.js";
-import { createLogs, filterLogs } from "./db/queries/logs.js"
+import { createLogs, filterLogs, aggregateLog } from "./db/queries/logs.js"
 import { Request, Response } from "express"
 import { cosineDistance } from "drizzle-orm";
 import { createLogConditions } from "./db/utils.js"
+
 const migrationClient = postgres(config.db.url, { max: 1 });
 
 try {
@@ -29,7 +30,7 @@ app.get("/health", healthHandler);
 app.post("/logs", createLogsHandler);
 
 app.get("/logs", queryLogsHandler);
-
+app.get("/logs/aggregate", aggregateLogsHandler);
 
 
 function healthHandler(req: Request, res: Response) {
@@ -66,7 +67,7 @@ async function queryLogsHandler(req: Request, res: Response) {
     }
     const logsValidate = validateQueryParameter(obj)
     if (!logsValidate.success) {
-        res.status(200).json({
+        res.status(400).json({
             "error": logsValidate.error,
         });
     }
@@ -77,6 +78,30 @@ async function queryLogsHandler(req: Request, res: Response) {
     });
 }
 
+async function aggregateLogsHandler(req: Request, res: Response,) {
+    // return time-buckted logs count 
+    // scince(Inclusive start) , until(exclusiv end ) , bucket(1m , 5m 1d , 1h)  -> required 
+    // group-by optional
+    // example 
+    // 07-20 and -07-22 and 1d 
+    // result {12,  07-20} , {14, 07-21}. apply inclusive, exclusiv order by bucket.
+    // each bucket is one row
+    // a
+    const obj = req.query
+    console.log("obj:", obj)
+
+    const aggValidate = validateAggQueryParameter(obj);
+    if (!aggValidate.success || !aggValidate.data) {
+        res.status(400).json({
+            "error": aggValidate.error,
+        });
+        return
+    }
+    const result = await aggregateLog(aggValidate.data);
+    return res.status(200).json({
+        result: result,
+    });
+}
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

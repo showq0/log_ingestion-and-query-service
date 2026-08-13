@@ -16,6 +16,13 @@ const logQuerySchema = z.object({
     cursor: z.string().optional(),
 });
 
+export const logAggrigatorSchema = z.object({
+    service: z.string().optional(),
+    bucket: z.literal(["1m", "5m", "1h", "1d"]),
+    since: z.coerce.date(),
+    until: z.coerce.date(),
+});
+
 
 type LogEntry = {
     timestamp: string;
@@ -184,5 +191,24 @@ export function validateQueryParameter(entryQueryParameter: {}): { success: bool
             path: error.path.join("."),
             message: error.message,
         }))
+    };
+}
+
+
+export function validateAggQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string, data?: z.infer<typeof logAggrigatorSchema> } {
+    // addition handle untile since with others 
+    const queryParameter = logAggrigatorSchema.safeParse(entryQueryParameter);
+    if (queryParameter.success) {
+        return { success: true, data: queryParameter.data };
+    }
+    const errors = JSON.parse(queryParameter.error.message);
+
+    return {
+        success: false,
+        error: errors.map((error: { path: string[]; message: string }) => ({
+            path: error.path.join("."),
+            message: error.message,
+        }
+        ))
     };
 }

@@ -1,8 +1,19 @@
 import { db } from "../index.js";
 import { NewLog, logs } from "../schema.js";
-import { and, SQL, desc, lt, or, eq, lte } from "drizzle-orm";
+import { and, SQL, desc, lt, eq, gte, sql, gt } from "drizzle-orm";
 import { encodeCursor } from "../../utils.js";
+import { logAggrigatorSchema } from "../../utils.js"
+import { z } from "zod"
 const PAGE_DEFAULT = 100;
+
+const intervals = {
+    "1m": sql`interval '1 minute'`,
+    "5m": sql`interval '5 minutes'`,
+    "1h": sql`interval '1 hour'`,
+    "1d": sql`interval '1 day'`,
+} as const;
+
+export type Bucket = keyof typeof intervals;
 
 export async function createLog(log: NewLog) {
     const [result] = await db
@@ -53,4 +64,41 @@ export async function filterLogs(conditions: SQL[], limit?: number) {
         logs: logsResult,
         next_cursor: nextCursor,
     };
+}
+
+export async function aggregateLog(data: z.infer<typeof logAggrigatorSchema>) {
+    const bucket = data.bucket;
+    const bucketExpression = sql<Date>`
+        date_bin(
+            ${intervals[bucket]},
+            ${logs.timestamp},
+            timestamptz '1970-01-01'
+        )
+    `;
+    if (data.service) {
+        const condtion = eq(logs.serviceName, data.service)
+        return db
+            .select({
+                bucket: bucketExpression,
+                count: sql<number>`count(*)`,
+                service: logs.serviceName
+            }).from(logs).where(and(
+                gte(logs.timestamp, data.since),
+                lt(logs.timestamp, data.until), condtion
+            )).groupBy(
+                bucketExpression,
+                logs.serviceName,
+            );
+    }
+
+    return db
+        .select({
+            bucket: bucketExpression,
+            count: sql<number>`count(*)`,
+        }).from(logs).where(and(
+            gte(logs.timestamp, data.since),
+            lt(logs.timestamp, data.until)
+        )).groupBy(
+            bucketExpression,
+        );
 }
