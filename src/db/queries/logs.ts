@@ -1,7 +1,7 @@
 import { db } from "../index.js";
 import { NewLog, logs } from "../schema.js";
 import { and, SQL, desc, lt, or, eq, lte } from "drizzle-orm";
-import { decodeCursor, encodeCursor } from "../../utils.js";
+import { encodeCursor } from "../../utils.js";
 const PAGE_DEFAULT = 100;
 
 export async function createLog(log: NewLog) {
@@ -45,8 +45,7 @@ export async function filterLogs(conditions: SQL[], limit?: number) {
     // the info should encoded
     const nextCursor = hasNextPage
         ? encodeCursor({
-            id: logsResult[logsResult.length - 1].id,
-            timestamp: logsResult[logsResult.length - 1].timestamp.toISOString(),
+            timestamp: logsResult[logsResult.length - 1].timestamp.toISOString()
         })
         : null;
 

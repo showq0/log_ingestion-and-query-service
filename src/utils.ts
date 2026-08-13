@@ -148,7 +148,6 @@ function toNewLog(entry: LogEntry): NewLog {
 
 type Cursor = {
     timestamp: string;
-    id: string;
 };
 
 export function encodeCursor(cursor: Cursor): string {
