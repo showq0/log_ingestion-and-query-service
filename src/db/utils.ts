@@ -1,6 +1,5 @@
 import { SQL, eq, gte, lt, lte, ilike, sql, and } from "drizzle-orm";
 import { logs } from "./schema.js";
-import { ParsedQs } from "qs";
 import { decodeCursor, logQuerySchema, logAggrigatorSchema } from "../utils.js"
 import { z } from "zod"
 export function createLogConditions(parameter: z.infer<typeof logQuerySchema>, attribute: {}): SQL[] {

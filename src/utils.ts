@@ -14,9 +14,6 @@ export const logQuerySchema = z.object({
         message: "limit must be less than  1000",
     }).optional(),
     cursor: z.string().optional(),
-
-
-
 });
 
 export const logAggrigatorSchema = z.object({

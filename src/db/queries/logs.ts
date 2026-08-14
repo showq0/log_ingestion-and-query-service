@@ -1,9 +1,7 @@
 import { db } from "../index.js";
 import { NewLog, logs } from "../schema.js";
-import { and, SQL, desc, lt, eq, gte, sql } from "drizzle-orm";
+import { and, SQL, desc, sql } from "drizzle-orm";
 import { encodeCursor } from "../../utils.js";
-import { logAggrigatorSchema } from "../../utils.js"
-import { z } from "zod"
 const PAGE_DEFAULT = 100;
 
 const intervals = {
