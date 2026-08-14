@@ -77,13 +77,13 @@ export async function aggregateLog(conditions: SQL[], isServiceExist: boolean, b
             .select({
                 bucket: bucketExpression,
                 count: sql<number>`count(*)`,
-                service: logs.serviceName
+                service: logs.service
             }).from(logs).where(
                 conditions.length > 0
                     ? and(...conditions)
                     : undefined,).groupBy(
                         bucketExpression,
-                        logs.serviceName,
+                        logs.service,
                     );
     }
 

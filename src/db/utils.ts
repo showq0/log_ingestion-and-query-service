@@ -8,7 +8,7 @@ export function createLogConditions(parameter: z.infer<typeof logQuerySchema>, a
     //Exact service-name match
     if (parameter.service) {
         conditions.push(
-            eq(logs.serviceName, parameter.service),
+            eq(logs.service, parameter.service),
         );
     }
     //Exact level match
@@ -20,14 +20,13 @@ export function createLogConditions(parameter: z.infer<typeof logQuerySchema>, a
     //Inclusive start of the time range
     if (parameter.since) {
         conditions.push(
-            gte(logs.timestamp, new Date(parameter.since)),
+            gte(logs.timestamp, parameter.since),
         );
     }
     //Exclusive end of the time range
     if (parameter.until) {
         conditions.push(
-            lt(logs.timestamp, new Date(parameter.until)),
-        );
+            lt(logs.timestamp, parameter.until));
     }
     //Case-insensitive substring match ilike
     if (parameter.q) {
@@ -63,7 +62,7 @@ export function createAggLogConditions(parameter: z.infer<typeof logAggrigatorSc
 
     if (parameter.service) {
         conditions.push(
-            eq(logs.serviceName, parameter.service),
+            eq(logs.service, parameter.service),
         );
     }
     if (parameter.level) {

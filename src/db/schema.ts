@@ -13,7 +13,7 @@ export const logs = pgTable("logs", {
 
     level: text("level").notNull(),
 
-    serviceName: text("service_name").notNull(),
+    service: text("service").notNull(),
 
     message: text("message").notNull(),
 

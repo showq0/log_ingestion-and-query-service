@@ -1,5 +1,5 @@
 {
-  "id": "949029a9-6176-4b85-98ae-80321dc7eda2",
+  "id": "605b0d72-0a88-4a4a-9cfb-b4d316eaa0fa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -28,8 +28,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "service_name": {
-          "name": "service_name",
+        "service": {
+          "name": "service",
           "type": "text",
           "primaryKey": false,
           "notNull": true
