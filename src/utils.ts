@@ -3,17 +3,20 @@ import { NewLog } from "./db/schema.js";
 import { z } from "zod";
 
 
-const logQuerySchema = z.object({
+export const logQuerySchema = z.object({
     service: z.string().optional(),
     level: z.literal(["debug", "info", "warn", "error"]).optional(),
-    since: z.iso.datetime().optional(),
-    until: z.iso.datetime().optional(),
+    since: z.coerce.date().optional(),
+    until: z.coerce.date().optional(),
     q: z.string().optional(),
 
     limit: z.string().regex(/^\d+$/, "limit must be a number").transform(Number).refine((value) => value <= 1000, {
         message: "limit must be less than  1000",
     }).optional(),
     cursor: z.string().optional(),
+
+
+
 });
 
 export const logAggrigatorSchema = z.object({
@@ -21,6 +24,8 @@ export const logAggrigatorSchema = z.object({
     bucket: z.literal(["1m", "5m", "1h", "1d"]),
     since: z.coerce.date(),
     until: z.coerce.date(),
+    level: z.literal(["debug", "info", "warn", "error"]).optional(),
+    q: z.string().optional(),
 });
 
 
@@ -169,7 +174,7 @@ export function decodeCursor(cursor: string): Cursor {
     );
 }
 
-export function validateQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string } {
+export function validateQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string, data?: z.infer<typeof logQuerySchema> } {
     // addition handle untile since with others 
     const queryParameter = logQuerySchema.safeParse(entryQueryParameter);
     if (queryParameter.success) {
@@ -178,9 +183,9 @@ export function validateQueryParameter(entryQueryParameter: {}): { success: bool
                 return { success: true, error: "until must be later than since" };
             }
             else
-                return { success: true };
+                return { success: true, data: queryParameter.data };
         }
-        return { success: true };
+        return { success: true, data: queryParameter.data };
     }
 
     const errors = JSON.parse(queryParameter.error.message);
@@ -196,9 +201,12 @@ export function validateQueryParameter(entryQueryParameter: {}): { success: bool
 
 
 export function validateAggQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string, data?: z.infer<typeof logAggrigatorSchema> } {
-    // addition handle untile since with others 
+
     const queryParameter = logAggrigatorSchema.safeParse(entryQueryParameter);
     if (queryParameter.success) {
+        if (queryParameter.data.since > queryParameter.data.until) {
+            return { success: true, error: "until must be later than since" };
+        }
         return { success: true, data: queryParameter.data };
     }
     const errors = JSON.parse(queryParameter.error.message);

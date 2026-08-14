@@ -1,55 +1,91 @@
 import { SQL, eq, gte, lt, lte, ilike, sql, and } from "drizzle-orm";
 import { logs } from "./schema.js";
 import { ParsedQs } from "qs";
-import { decodeCursor } from "../utils.js"
-export function createLogConditions(parameter: ParsedQs): SQL[] {
+import { decodeCursor, logQuerySchema, logAggrigatorSchema } from "../utils.js"
+import { z } from "zod"
+export function createLogConditions(parameter: z.infer<typeof logQuerySchema>, attribute: {}): SQL[] {
     //GET /logs?service=checkout&level=error&attr.user_id=42&attr.region=eu-west
     const conditions: SQL[] = [];
     //Exact service-name match
-    if (parameter.service !== undefined && typeof parameter.service === 'string') {
+    if (parameter.service) {
         conditions.push(
             eq(logs.serviceName, parameter.service),
         );
     }
     //Exact level match
-    if (parameter.level !== undefined && typeof parameter.level === 'string') {
+    if (parameter.level) {
         conditions.push(
             eq(logs.level, parameter.level),
         );
     }
     //Inclusive start of the time range
-
-    if (parameter.since !== undefined && (typeof parameter.since === "string")) {
+    if (parameter.since) {
         conditions.push(
             gte(logs.timestamp, new Date(parameter.since)),
         );
     }
     //Exclusive end of the time range
-    if (parameter.until !== undefined && (typeof parameter.until === "string")) {
+    if (parameter.until) {
         conditions.push(
             lt(logs.timestamp, new Date(parameter.until)),
         );
     }
     //Case-insensitive substring match ilike
-    if (parameter.q !== undefined) {
+    if (parameter.q) {
         conditions.push(
             ilike(logs.message, `%${parameter.q}%`),
         );
     }
-    if (parameter.cursor !== undefined && (typeof parameter.cursor === "string")) {
+    if (parameter.cursor) {
         const cursorInfo = decodeCursor(parameter.cursor);
         const cursorTimestamp = new Date(cursorInfo.timestamp);
         conditions.push(lte(logs.timestamp, cursorTimestamp))
     }
-
-    for (const [key, value] of Object.entries(parameter)) {
-        if (key.startsWith("attr.")) {
-            const keyAttribute = key.slice(5);
-            conditions.push(
-                // access attribute
-                sql`${logs.attributes}->>${keyAttribute} = ${value}`,
-            );
-        }
+    for (const [key, value] of Object.entries(attribute)) {
+        conditions.push(
+            // access attribute
+            sql`${logs.attributes}->>${key} = ${value}`,
+        );
     }
+
+    return conditions;
+}
+
+export function createAggLogConditions(parameter: z.infer<typeof logAggrigatorSchema>, attribute: {}): SQL[] {
+    const conditions: SQL[] = [];
+
+    conditions.push(
+        gte(logs.timestamp, parameter.since),
+    );
+
+    conditions.push(
+        lt(logs.timestamp, parameter.until),
+    );
+
+    if (parameter.service) {
+        conditions.push(
+            eq(logs.serviceName, parameter.service),
+        );
+    }
+    if (parameter.level) {
+        conditions.push(
+            eq(logs.level, parameter.level),
+        );
+    }
+
+    //Case-insensitive substring match ilike
+    if (parameter.q) {
+        conditions.push(
+            ilike(logs.message, `%${parameter.q}%`),
+        );
+    }
+
+    for (const [key, value] of Object.entries(attribute)) {
+        conditions.push(
+            // access attribute
+            sql`${logs.attributes}->>${key} = ${value}`,
+        );
+    }
+
     return conditions;
 }

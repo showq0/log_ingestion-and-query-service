@@ -6,8 +6,7 @@ import { validateLogs, validateQueryParameter, validateAggQueryParameter } from 
 import { config } from "./config.js";
 import { createLogs, filterLogs, aggregateLog } from "./db/queries/logs.js"
 import { Request, Response } from "express"
-import { cosineDistance } from "drizzle-orm";
-import { createLogConditions } from "./db/utils.js"
+import { createLogConditions, createAggLogConditions } from "./db/utils.js"
 
 const migrationClient = postgres(config.db.url, { max: 1 });
 
@@ -66,12 +65,20 @@ async function queryLogsHandler(req: Request, res: Response) {
         limit = Number(obj.limit)
     }
     const logsValidate = validateQueryParameter(obj)
-    if (!logsValidate.success) {
-        res.status(400).json({
+    if (!logsValidate.data || !logsValidate.success) {
+        return res.status(400).json({
             "error": logsValidate.error,
         });
     }
-    const conditions = createLogConditions(obj) || undefined;
+    const attribute: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+        if (key.startsWith("attr.") && typeof value === "string") {
+            const keyAttribute = key.slice(5);
+            attribute[keyAttribute] = value;
+        }
+    }
+    const conditions = createLogConditions(logsValidate.data, attribute) || undefined;
     const result = await filterLogs(conditions, limit);
     res.status(200).json({
         result: result,
@@ -88,16 +95,25 @@ async function aggregateLogsHandler(req: Request, res: Response,) {
     // each bucket is one row
     // a
     const obj = req.query
-    console.log("obj:", obj)
-
     const aggValidate = validateAggQueryParameter(obj);
+    // attribute extract 
+    const attribute: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+        if (key.startsWith("attr.") && typeof value === "string") {
+            const keyAttribute = key.slice(5);
+            attribute[keyAttribute] = value;
+        }
+    }
     if (!aggValidate.success || !aggValidate.data) {
         res.status(400).json({
             "error": aggValidate.error,
         });
         return
     }
-    const result = await aggregateLog(aggValidate.data);
+    const condtion = createAggLogConditions(aggValidate.data, attribute)
+
+    const result = await aggregateLog(condtion, aggValidate.data.service ? true : false, aggValidate.data.bucket);
     return res.status(200).json({
         result: result,
     });

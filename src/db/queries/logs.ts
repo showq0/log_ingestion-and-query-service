@@ -1,6 +1,6 @@
 import { db } from "../index.js";
 import { NewLog, logs } from "../schema.js";
-import { and, SQL, desc, lt, eq, gte, sql, gt } from "drizzle-orm";
+import { and, SQL, desc, lt, eq, gte, sql } from "drizzle-orm";
 import { encodeCursor } from "../../utils.js";
 import { logAggrigatorSchema } from "../../utils.js"
 import { z } from "zod"
@@ -66,8 +66,7 @@ export async function filterLogs(conditions: SQL[], limit?: number) {
     };
 }
 
-export async function aggregateLog(data: z.infer<typeof logAggrigatorSchema>) {
-    const bucket = data.bucket;
+export async function aggregateLog(conditions: SQL[], isServiceExist: boolean, bucket: Bucket) {
     const bucketExpression = sql<Date>`
         date_bin(
             ${intervals[bucket]},
@@ -75,30 +74,29 @@ export async function aggregateLog(data: z.infer<typeof logAggrigatorSchema>) {
             timestamptz '1970-01-01'
         )
     `;
-    if (data.service) {
-        const condtion = eq(logs.serviceName, data.service)
+    if (isServiceExist) {
         return db
             .select({
                 bucket: bucketExpression,
                 count: sql<number>`count(*)`,
                 service: logs.serviceName
-            }).from(logs).where(and(
-                gte(logs.timestamp, data.since),
-                lt(logs.timestamp, data.until), condtion
-            )).groupBy(
-                bucketExpression,
-                logs.serviceName,
-            );
+            }).from(logs).where(
+                conditions.length > 0
+                    ? and(...conditions)
+                    : undefined,).groupBy(
+                        bucketExpression,
+                        logs.serviceName,
+                    );
     }
 
     return db
         .select({
             bucket: bucketExpression,
             count: sql<number>`count(*)`,
-        }).from(logs).where(and(
-            gte(logs.timestamp, data.since),
-            lt(logs.timestamp, data.until)
-        )).groupBy(
-            bucketExpression,
-        );
+        }).from(logs).where(
+            conditions.length > 0
+                ? and(...conditions)
+                : undefined).groupBy(
+                    bucketExpression,
+                );
 }
