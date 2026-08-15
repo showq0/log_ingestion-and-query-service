@@ -1,6 +1,7 @@
 import type { MigrationConfig } from "drizzle-orm/migrator";
 
-process.loadEnvFile()
+
+
 const migrationConfig: MigrationConfig = {
     migrationsFolder: "./drizzle",
 };

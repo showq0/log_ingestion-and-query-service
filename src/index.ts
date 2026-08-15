@@ -14,7 +14,7 @@ const app = express();
 
 // alformed JSON syntax
 app.use(express.json());
-const PORT = 8080;
+const PORT = process.env["PORT"];
 
 app.use(express.static("."));
 
