@@ -17,7 +17,7 @@ export async function createLogsHandler(req: Request, res: Response) {
     // insert valid logs
     await createLogs(result.valid);
 
-    return res.status(201).json({
+    return res.status(200).json({
         accepted: result.valid.length,
         rejected: result.invalid
     });
