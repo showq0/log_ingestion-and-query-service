@@ -25,7 +25,7 @@ export const logAggrigatorSchema = z.object({
 });
 
 
-const logSchema = z.object({
+export const logSchema = z.object({
     timestamp: z
         .iso.datetime()
         .refine(
