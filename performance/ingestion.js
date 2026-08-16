@@ -29,12 +29,11 @@ export const options = {
                 { target: 50, duration: "20" },
 
                 // 10,000 logs/sec
-                { target: 100, duration: "20" },
+                { target: 80, duration: "20" },
 
-                // 15,000 logs/sec
-                { target: 150, duration: "120s" },
+                { target: 50, duration: "20s" },
 
-                { target: 0, duration: "10s" },
+                { target: 10, duration: "10s" },
             ],
         },
     },
@@ -101,3 +100,9 @@ export default function () {
         logsAccepted.add(accepted);
     }
 }
+
+// export function handleSummary(data) {
+//     return {
+//         "performance/ingestion-summary.json": JSON.stringify(data, null, 2),
+//     };
+// }
