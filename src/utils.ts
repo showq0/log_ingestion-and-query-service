@@ -40,7 +40,7 @@ export function decodeCursor(cursor: string): Cursor {
   return JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));
 }
 
-export function validateQueryParameter(entryQueryParameter: {}): {
+export function validateQueryParameter(entryQueryParameter: unknown): {
   success: boolean;
   error?: string;
   data?: z.infer<typeof logQuerySchema>;
@@ -67,7 +67,7 @@ export function validateQueryParameter(entryQueryParameter: {}): {
   };
 }
 
-export function validateAggQueryParameter(entryQueryParameter: {}): {
+export function validateAggQueryParameter(entryQueryParameter: unknown): {
   success: boolean;
   error?: string;
   data?: z.infer<typeof logAggrigatorSchema>;

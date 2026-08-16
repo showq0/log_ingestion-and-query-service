@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { NewLog } from "./db/schema.js";
-import { sql } from "drizzle-orm";
 
 export const logQuerySchema = z.object({
   service: z.string().optional(),
