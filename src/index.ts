@@ -3,12 +3,10 @@ import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
-import { Request, Response } from "express"
-import { createLogsHandler } from "./api/ingestLogs.js"
-import { queryLogsHandler } from "./api/queryLogs.js"
-import { aggregateLogsHandler } from "./api/aggregateLogs.js"
-
-
+import { Request, Response } from "express";
+import { createLogsHandler } from "./api/ingestLogs.js";
+import { queryLogsHandler } from "./api/queryLogs.js";
+import { aggregateLogsHandler } from "./api/aggregateLogs.js";
 
 const app = express();
 
@@ -24,42 +22,38 @@ app.post("/logs", createLogsHandler);
 app.get("/logs", queryLogsHandler);
 app.get("/logs/aggregate", aggregateLogsHandler);
 
-
 function healthHandler(req: Request, res: Response) {
-    res.status(200).json({
-        status: "ok",
-    });
+  res.status(200).json({
+    status: "ok",
+  });
 }
 
 async function startServer() {
-    const migrationClient = postgres(config.db.url, { max: 1, });
+  const migrationClient = postgres(config.db.url, { max: 1 });
 
-    try {
-        //Verify database connection
-        await migrationClient`SELECT 1`;
+  try {
+    //Verify database connection
+    await migrationClient`SELECT 1`;
 
-        console.log("Database connection established");
+    console.log("Database connection established");
 
-        // try migrations
-        await migrate(
-            drizzle(migrationClient),
-            config.db.migrationConfig,
-        );
+    // try migrations
+    await migrate(drizzle(migrationClient), config.db.migrationConfig);
 
-        console.log("Database migrations completed");
+    console.log("Database migrations completed");
 
-        // start 
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    } catch (error) {
-        console.error("Database initialization failed:", error);
+    // start
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Database initialization failed:", error);
 
-        // Close DB connection
-        await migrationClient.end();
+    // Close DB connection
+    await migrationClient.end();
 
-        process.exit(1);
-    }
+    process.exit(1);
+  }
 }
 
 startServer();
