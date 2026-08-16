@@ -1,26 +1,29 @@
-import { NewLog } from "./db/schema.js";
-import { ValidationResult, InvalidLog, logsSchema, logAggrigatorSchema, logQuerySchema, Cursor } from "./type.js"
+import { ValidationResult, logSchema, logAggrigatorSchema, logQuerySchema, Cursor } from "./type.js"
 
 import { z } from "zod";
 
-
 export function validateLogs(logs: unknown[]): ValidationResult {
-    let valid: NewLog[] = [];
-    let invalid: InvalidLog[] = [];
+    return logs.reduce<ValidationResult>(
+        (result, log, index) => {
+            const parseLog = logSchema.safeParse(log);
 
-    const result = logsSchema.safeParse(logs);
-    if (result.success && result.data) {
-        valid = result.data;
-    } else {
-        invalid = result.error.issues.map((issue) => ({
-            index: Number(issue.path[0]),
-            reason: `${String(issue.path[1])}: ${issue.message}`,
-        }));
-    };
-    return {
-        valid,
-        invalid,
-    };
+            if (parseLog.success) {
+                result.valid.push(parseLog.data);
+            } else {
+                result.invalid.push({
+                    index,
+                    reason: parseLog.error.issues
+                        .map((issue) => `${String(issue.path[0])}: ${issue.message}`)
+                        .join(", "),
+                });
+            }
+            return result;
+        },
+        {
+            valid: [],
+            invalid: [],
+        }
+    );
 }
 
 

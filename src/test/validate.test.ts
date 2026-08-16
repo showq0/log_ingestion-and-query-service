@@ -26,7 +26,7 @@ describe("validate", () => {
                 "message": "hello"
             },
             {
-                "timestamp": "2026-07-20T14:32:01.123Z",
+                "timestamp": new Date().toISOString(),
                 "level": "error",
                 "service": "checkout",
                 "message": "payment declined",
@@ -39,8 +39,6 @@ describe("validate", () => {
         ]
 
         const result = validateLogs(logs);
-        console.log(result.valid);
-        console.log(result.invalid);
 
         expect(result.valid.length).toBe(1);
         expect(result.invalid.length).toBe(4);
