@@ -3,10 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
     ports:
       - "8080:8080"
+    environment:
+      DB_URL: postgres://postgres:postgres@host.docker.internal:5432/logs_db?sslmode=disable
+      PLATFORM: linux/arm64
+      PORT: 8080
     depends_on:
       db:
         condition: service_healthy
@@ -19,9 +21,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: logs_db 
     ports:
       - "5432:5432"
     healthcheck:
