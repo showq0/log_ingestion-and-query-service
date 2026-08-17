@@ -23,7 +23,7 @@ type Config = {
 export const config: Config = {
     api: {
         fileserverHits: 0,
-        port: Number(process.env["PORT"])!,
+        port: Number(process.env["PORT"] ?? 8080),
         platform: process.env["PLATFORM"]!
     }
     ,

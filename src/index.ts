@@ -14,7 +14,7 @@ const app = express();
 
 // alformed JSON syntax
 app.use(express.json());
-const PORT = Number(process.env["PORT"]) || 8080;
+const PORT = config.api.port;
 
 app.use(express.static("."));
 
@@ -23,7 +23,6 @@ app.post("/logs", createLogsHandler);
 
 app.get("/logs", queryLogsHandler);
 app.get("/logs/aggregate", aggregateLogsHandler);
-
 
 function healthHandler(req: Request, res: Response) {
     res.status(200).json({
