@@ -1,6 +1,6 @@
 import type { MigrationConfig } from "drizzle-orm/migrator";
 
-
+const HOST = process.env["HOST"] ?? "localhost"
 
 const migrationConfig: MigrationConfig = {
     migrationsFolder: "./drizzle",
@@ -28,7 +28,7 @@ export const config: Config = {
     }
     ,
     db: {
-        url: process.env["DB_URL"]!,
+        url: `postgres://postgres:postgres@${HOST}:5432/logs_db?sslmode=disable`,
         migrationConfig: migrationConfig,
     },
 };
