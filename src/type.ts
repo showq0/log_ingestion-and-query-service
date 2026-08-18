@@ -9,8 +9,8 @@ export const logQuerySchema = z.object({
     until: z.iso.datetime().transform((value) => new Date(value)).optional(),
     q: z.string().optional(),
 
-    limit: z.string().regex(/^\d+$/, "limit must be a number").transform(Number).refine((value) => value <= 1000, {
-        message: "limit must be less than  1000",
+    limit: z.string().regex(/^\d+$/, "limit must be a number").transform(Number).refine((value) => value >= 1 && value <= 1000, {
+        message: "limit must be positive and less than  1000",
     }).optional(),
     cursor: z.string().optional(),
 });
