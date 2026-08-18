@@ -1,5 +1,5 @@
 import { ValidationResult, logSchema, logAggrigatorSchema, logQuerySchema, Cursor } from "./type.js"
-
+import errors from "./errors.js";
 import { z } from "zod";
 
 export function validateLogs(logs: unknown[]): ValidationResult {
@@ -34,9 +34,13 @@ export function encodeCursor(cursor: Cursor): string {
 }
 
 export function decodeCursor(cursor: string): Cursor {
-    return JSON.parse(
-        Buffer.from(cursor, "base64url").toString("utf-8")
-    );
+    try {
+        const decoded = Buffer.from(cursor, "base64url").toString("utf8");
+        const parsed = JSON.parse(decoded);
+        return parsed;
+    } catch {
+        throw new errors.BadRequestError("Invalid cursor");
+    }
 }
 
 export function validateQueryParameter(

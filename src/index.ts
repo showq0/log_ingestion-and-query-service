@@ -7,7 +7,7 @@ import { Request, Response } from "express"
 import { createLogsHandler } from "./api/ingestLogs.js"
 import { queryLogsHandler } from "./api/queryLogs.js"
 import { aggregateLogsHandler } from "./api/aggregateLogs.js"
-
+import errorsHandling from "./middlewares/errors-handling.js"
 
 
 const app = express();
@@ -17,6 +17,7 @@ app.use(express.json());
 const PORT = config.api.port;
 
 app.use(express.static("."));
+
 
 app.get("/health", healthHandler);
 app.post("/logs", createLogsHandler);
@@ -29,6 +30,7 @@ function healthHandler(req: Request, res: Response) {
         status: "ok",
     });
 }
+app.use(errorsHandling)
 
 async function startServer() {
     const migrationClient = postgres(config.db.url, { max: 1, });
