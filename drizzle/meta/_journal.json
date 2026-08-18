@@ -8,6 +8,13 @@
       "when": 1786748872077,
       "tag": "0000_marvelous_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787033248436,
+      "tag": "0001_big_power_pack",
+      "breakpoints": true
     }
   ]
 }

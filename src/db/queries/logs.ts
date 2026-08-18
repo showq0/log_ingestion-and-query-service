@@ -27,7 +27,6 @@ export async function createLogs(logEntries: NewLog[]) {
         .insert(logs)
         .values(logEntries)
         .onConflictDoNothing()
-        .returning();
 }
 
 export async function filterLogs(conditions: SQL[], limit?: number) {
@@ -66,10 +65,9 @@ export async function filterLogs(conditions: SQL[], limit?: number) {
 
 export async function aggregateLog(conditions: SQL[], isServiceExist: boolean, bucket: Bucket) {
     const bucketExpression = sql<Date>`
-        date_bin(
+        time_bucket(
             ${intervals[bucket]},
-            ${logs.timestamp},
-            timestamptz '1970-01-01'
+            ${logs.timestamp}
         )
     `;
     if (isServiceExist) {
