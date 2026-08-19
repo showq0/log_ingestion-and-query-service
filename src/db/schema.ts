@@ -1,6 +1,7 @@
 import {
     uuid,
     jsonb,
+    bigint,
     pgTable,
     primaryKey,
     text,
@@ -27,5 +28,13 @@ export const logs = pgTable("logs", {
         index("logs_timestamp_idx").on(table.timestamp.desc()),
     ]
 );
+
+// Read-only mapping for the Timescale continuous aggregate created in migration 0002.
+export const logs1m = pgTable("logs_1m", {
+    bucket: timestamp("bucket", { withTimezone: true }).notNull(),
+    service: text("service").notNull(),
+    level: text("level").notNull(),
+    count: bigint("count", { mode: "number" }).notNull(),
+});
 
 export type NewLog = typeof logs.$inferInsert;

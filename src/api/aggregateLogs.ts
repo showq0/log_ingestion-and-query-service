@@ -1,7 +1,7 @@
 import { validateAggQueryParameter } from "../utils.js"
 import { Request, Response } from "express"
-import { createAggLogConditions } from "../db/utils.js"
-import { aggregateLog } from "../db/queries/logs.js"
+import { createAggLog1mConditions, createAggLogConditions } from "../db/utils.js"
+import { aggregateLog, aggregateLog1m } from "../db/queries/logs.js"
 
 export async function aggregateLogsHandler(req: Request, res: Response,) {
     // return time-buckted logs count 
@@ -23,9 +23,18 @@ export async function aggregateLogsHandler(req: Request, res: Response,) {
         });
         return
     }
-    const condtion = createAggLogConditions(aggValidate.data, attribute)
-
-    const result = await aggregateLog(condtion, aggValidate.data.group_by, aggValidate.data.bucket);
+    const canUsePreAggregate = !aggValidate.data.q && Object.keys(attribute).length === 0;
+    const result = canUsePreAggregate
+        ? await aggregateLog1m(
+            createAggLog1mConditions(aggValidate.data),
+            aggValidate.data.group_by,
+            aggValidate.data.bucket,
+        )
+        : await aggregateLog(
+            createAggLogConditions(aggValidate.data, attribute),
+            aggValidate.data.group_by,
+            aggValidate.data.bucket,
+        );
     return res.status(200).json({
         "buckets": result,
     });

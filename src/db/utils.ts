@@ -1,5 +1,5 @@
 import { SQL, eq, gte, lt, lte, ilike, sql, and } from "drizzle-orm";
-import { logs } from "./schema.js";
+import { logs, logs1m } from "./schema.js";
 import { decodeCursor } from "../utils.js"
 import { logQuerySchema, logAggrigatorSchema } from "../type.js"
 import { z } from "zod"
@@ -87,5 +87,17 @@ export function createAggLogConditions(parameter: z.infer<typeof logAggrigatorSc
         );
     }
 
+    return conditions;
+}
+
+/** Conditions supported by logs_1m; message and JSON attributes are not stored there. */
+export function createAggLog1mConditions(parameter: z.infer<typeof logAggrigatorSchema>): SQL[] {
+    const conditions: SQL[] = [
+        gte(logs1m.bucket, parameter.since),
+        lt(logs1m.bucket, parameter.until),
+    ];
+
+    if (parameter.service) conditions.push(eq(logs1m.service, parameter.service));
+    if (parameter.level) conditions.push(eq(logs1m.level, parameter.level));
     return conditions;
 }
