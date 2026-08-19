@@ -25,8 +25,8 @@ export async function aggregateLogsHandler(req: Request, res: Response,) {
     }
     const condtion = createAggLogConditions(aggValidate.data, attribute)
 
-    const result = await aggregateLog(condtion, aggValidate.data.service ? true : false, aggValidate.data.bucket);
+    const result = await aggregateLog(condtion, aggValidate.data.group_by, aggValidate.data.bucket);
     return res.status(200).json({
-        result: result,
+        "buckets": result,
     });
 }

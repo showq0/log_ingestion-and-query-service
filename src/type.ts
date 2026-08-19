@@ -18,6 +18,7 @@ export const logQuerySchema = z.object({
 export const logAggrigatorSchema = z.object({
     service: z.string().optional(),
     bucket: z.literal(["1m", "5m", "1h", "1d"]),
+    group_by: z.literal(["service", "level"]).optional(),
     since: z.iso.datetime().transform((value) => new Date(value)),
     until: z.iso.datetime().transform((value) => new Date(value)),
     level: z.literal(["debug", "info", "warn", "error"]).optional(),
