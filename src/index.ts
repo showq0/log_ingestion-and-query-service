@@ -14,7 +14,7 @@ const app = express();
 
 // alformed JSON syntax
 app.use(express.json());
-const PORT = config.api.port;
+const PORT = config.api.port||8080;
 
 app.use(express.static("."));
 
