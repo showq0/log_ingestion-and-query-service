@@ -1,24 +1,25 @@
-import postgres from "postgres";
-import { logs } from "../src/db/schema.js";
-import { drizzle } from "drizzle-orm/postgres-js";
+import { createClient } from "@clickhouse/client";
 import { config } from "../src/config.js";
 
-const DB_URL = config.db.url;
-
-console.log(DB_URL);
-
-if (!DB_URL) {
-    throw new Error("DATABASE_URL is required");
-}
-
-const client = postgres(DB_URL, {
-    max: 10,
+const client = createClient({
+    url: config.clickhouse.url,
+    database: config.clickhouse.database,
+    clickhouse_settings: {
+        async_insert: 0,
+    }
+    // clickhouse_settings: {
+    //     max_insert_block_size: 8192,
+    //     min_insert_block_size_rows: 4096,
+    //     min_insert_block_size_bytes: 8_388_608,
+    //     input_format_parallel_parsing: 0,
+    //     max_insert_threads: 1,
+    //     max_memory_usage: 400_000_000,
+    // },
 });
 
-const db = drizzle(client);
-
 const TOTAL_LOGS = 1_000_000;
-const BATCH_SIZE = 5_000;
+// 1GiB ClickHouse: stay at the low end of the 1,000–10,000 sync-insert range.
+const BATCH_SIZE = 8_000;
 
 // Historical data: July 1 → July 31, 2026
 const START_DATE = new Date("2026-07-01T00:00:00.000Z");
@@ -64,9 +65,10 @@ function randomTimestamp(): Date {
 function createLog() {
     const service = randomItem(services);
     const level = randomItem(levels);
+    const ts = randomTimestamp();
 
     return {
-        timestamp: randomTimestamp(),
+        timestamp: ts.toISOString().replace("T", " ").replace("Z", ""),
         level,
         service,
         message: randomItem(messages),
@@ -81,14 +83,14 @@ function createLog() {
                 "ap-south",
                 "eu-central",
             ]),
-            retries: Math.floor(Math.random() * 4),
+            retries: String(Math.floor(Math.random() * 4)),
         },
     };
 }
 
 async function seed() {
     console.log(
-        `Seeding ${TOTAL_LOGS.toLocaleString()} logs...`,
+        `Seeding ${TOTAL_LOGS.toLocaleString()} logs into ClickHouse...`,
     );
 
     console.log(
@@ -112,7 +114,11 @@ async function seed() {
             createLog,
         );
 
-        await db.insert(logs).values(batch);
+        await client.insert({
+            table: "logs",
+            values: batch,
+            format: "JSONEachRow",
+        });
 
         const inserted = offset + size;
         const percentage = (
@@ -132,12 +138,10 @@ async function seed() {
         `Finished seeding ${TOTAL_LOGS.toLocaleString()} logs in ${elapsed.toFixed(2)}s`,
     );
 
-    await client.end();
+    await client.close();
 }
 
 seed().catch(async (error) => {
     console.error("Seeding failed:", error);
-
-    await client.end();
-
+    await client.close();
 });

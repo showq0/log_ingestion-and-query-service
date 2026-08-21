@@ -24,8 +24,9 @@ export async function queryLogsHandler(req: Request, res: Response) {
             attribute[keyAttribute] = value;
         }
     }
-    const conditions = createLogConditions(logsValidate.data, attribute) || undefined;
-    const result = await filterLogs(conditions, limit);
+
+    const { conditions, params } = createLogConditions(logsValidate.data, attribute);
+    const result = await filterLogs(conditions, params, limit);
     res.status(200).json({
         result: result,
     });

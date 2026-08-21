@@ -1,20 +1,19 @@
 import express from "express";
-import postgres from "postgres";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
 import { Request, Response } from "express"
 import { createLogsHandler } from "./api/ingestLogs.js"
 import { queryLogsHandler } from "./api/queryLogs.js"
 import { aggregateLogsHandler } from "./api/aggregateLogs.js"
 import errorsHandling from "./middlewares/errors-handling.js"
+import { client } from "./db/index.js";
+import { migrate } from "./db/schema.js";
 
 
 const app = express();
 
 // alformed JSON syntax
 app.use(express.json());
-const PORT = config.api.port||8080;
+const PORT = config.api.port || 8080;
 
 app.use(express.static("."));
 
@@ -33,37 +32,27 @@ function healthHandler(req: Request, res: Response) {
 app.use(errorsHandling)
 
 async function startServer() {
-    const migrationClient = postgres(config.db.url, { max: 1, });
-
     try {
-        //Verify database connection
-        await migrationClient`SELECT 1`;
+        // Verify ClickHouse connection
+        const pingResult = await client.ping();
+        if (!pingResult.success) {
+            throw new Error("ClickHouse ping failed");
+        }
+        console.log("ClickHouse connection established");
 
-        console.log("Database connection established");
+        // Run DDL migration (CREATE TABLE IF NOT EXISTS)
+        await migrate();
 
-        // try migrations
-        await migrate(
-            drizzle(migrationClient),
-            config.db.migrationConfig,
-        );
-
-        console.log("Database migrations completed");
-
-        // start 
-        // app.listen(PORT, () => {
-        //     console.log(`Server is running on port ${PORT}`);
-        // });
+        // Start server
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
     } catch (error) {
         console.error("Database initialization failed:", error);
-
-        // Close DB connection
-        await migrationClient.end();
-
+        await client.close();
         process.exit(1);
     }
 }
 
 startServer();
+

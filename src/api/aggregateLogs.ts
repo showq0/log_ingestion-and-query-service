@@ -24,8 +24,10 @@ export async function aggregateLogsHandler(req: Request, res: Response,) {
         return
     }
 
+    const { conditions, params } = createAggLogConditions(aggValidate.data, attribute);
     const result = await aggregateLog(
-        createAggLogConditions(aggValidate.data, attribute),
+        conditions,
+        params,
         aggValidate.data.group_by,
         aggValidate.data.bucket,
     );

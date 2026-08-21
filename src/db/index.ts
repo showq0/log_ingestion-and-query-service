@@ -1,8 +1,15 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-
-import * as schema from "./schema.js";
+import { createClient } from "@clickhouse/client";
 import { config } from "../config.js";
-
-const conn = postgres(config.db.url);
-export const db = drizzle(conn, { schema });
+export const client = createClient({
+    url: config.clickhouse.url,
+    database: config.clickhouse.database,
+    clickhouse_settings: {
+        wait_end_of_query: 1,
+        async_insert: 0,
+        wait_for_async_insert: 0, // irrelevant when async_insert=0
+    }
+    // clickhouse_settings: {
+    //     wait_end_of_query: 1,
+    //     async_insert: 0,
+    // },
+});
