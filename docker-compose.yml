@@ -28,16 +28,6 @@ services:
 
     ports:
       - "5432:5432"
-    command: [
-      "postgres",
-      "-c", "shared_preload_libraries=timescaledb",
-      "-c", "max_connections=100",
-      "-c", "shared_buffers=256MB",      # Allocates dedicated RAM for caching (25% of 1G limit)
-      "-c", "work_mem=4MB",             # Speeds up sorting/aggregations without CPU thrashing
-      "-c", "maintenance_work_mem=64MB", # Speeds up hypertable chunk creation and indexing
-      "-c", "synchronous_commit=off",     # Dramatically cuts write latency & CPU waiting time
-      "-c", "gin_pending_list_limit=4MB"   # Controls how large the GIN insert buffer can grow before flushing
-    ]
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d logs_db" ]
       interval: 5s
