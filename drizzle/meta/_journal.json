@@ -5,22 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1786748872077,
-      "tag": "0000_marvelous_kid_colt",
+      "when": 1787314572683,
+      "tag": "0000_sharp_dagger",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1787033248436,
-      "tag": "0001_big_power_pack",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1787175584000,
-      "tag": "0002_logs_1m",
+      "when": 1787314572684,
+      "tag": "0001_timescaledb_hypertable",
       "breakpoints": true
     }
   ]

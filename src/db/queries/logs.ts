@@ -1,5 +1,5 @@
 import { db } from "../index.js";
-import { NewLog, logs, logs1m } from "../schema.js";
+import { NewLog, logs } from "../schema.js";
 import { and, SQL, desc, sql, asc } from "drizzle-orm";
 import { encodeCursor } from "../../utils.js";
 const PAGE_DEFAULT = 100;
@@ -118,22 +118,4 @@ export async function aggregateLog(
                 );
 }
 
-export async function aggregateLog1m(
-    conditions: SQL[],
-    groupBy: "service" | "level" | undefined,
-    bucket: Bucket,
-) {
-    const bucketExpression = sql<Date>`time_bucket(${intervals[bucket]}, ${logs1m.bucket})`;
-    const groupColumn = groupBy === "service" ? logs1m.service : groupBy === "level" ? logs1m.level : undefined;
-    const selection = {
-        start: bucketExpression,
-        group: groupColumn ?? sql<null>`NULL`,
-        count: sql<number>`sum(${logs1m.count})::bigint`,
-    };
 
-    return db
-        .select(selection)
-        .from(logs1m)
-        .where(and(...conditions))
-        .groupBy(bucketExpression, ...(groupColumn ? [groupColumn] : []));
-}
