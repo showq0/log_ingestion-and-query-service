@@ -23,7 +23,7 @@ export const logs = pgTable("logs", {
     attributes: jsonb("attributes"),
 },
     (table) => [
-        primaryKey({ columns: [table.timestamp, table.id] }),
+        primaryKey({ columns: [table.timestamp, table.id, table.service] }),
         index("logs_service_timestamp_idx").on(table.service, table.timestamp.desc()),
         index("logs_timestamp_idx").on(table.timestamp.desc()),
     ]
