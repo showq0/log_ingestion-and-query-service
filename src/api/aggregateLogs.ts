@@ -17,19 +17,46 @@ export async function aggregateLogsHandler(req: Request, res: Response,) {
             attribute[keyAttribute] = value;
         }
     }
-    if (!aggValidate.success || !aggValidate.data) {
+    if (!aggValidate.success || !aggValidate.data?.since) {
         res.status(400).json({
             "error": aggValidate.error,
         });
         return
     }
+    const hasCompleteMinuteRange = isMinuteAligned(aggValidate.data.since) && isMinuteAligned(aggValidate.data.until);
+    const canUsePreAggregate =
+        hasCompleteMinuteRange &&
+        !aggValidate.data.q &&
+        Object.keys(attribute).length === 0 &&
+        !(
+            (aggValidate.data.group_by === "service" && aggValidate.data.level !== undefined) ||
+            (aggValidate.data.group_by === "level" && aggValidate.data.service !== undefined)
+        );
 
-    const result = await aggregateLog(
-        createAggLogConditions(aggValidate.data, attribute),
-        aggValidate.data.group_by,
-        aggValidate.data.bucket,
-    );
+    const result = canUsePreAggregate
+        ? await aggregateLog1m(
+            createAggLog1mConditions(aggValidate.data),
+            aggValidate.data.group_by,
+            aggValidate.data.bucket,
+        )
+        : await aggregateLog(
+            createAggLogConditions(aggValidate.data, attribute),
+            aggValidate.data.group_by,
+            aggValidate.data.bucket,
+        );
+
+    // const result = await aggregateLog(
+    //     createAggLogConditions(aggValidate.data, attribute),
+    //     aggValidate.data.group_by,
+    //     aggValidate.data.bucket,
+    // );
     return res.status(200).json({
         "buckets": result,
     });
 }
+
+const isMinuteAligned = (value: Date | undefined): boolean => {
+    if (!value)
+        return false;
+    return (value.getUTCSeconds() === 0 && value.getUTCMilliseconds() === 0);
+};
