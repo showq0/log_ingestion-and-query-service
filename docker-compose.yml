@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      HOST: "db"
+      HOST: "0.0.0.0"
       PLATFORM: linux/arm64
       PORT: 8080
       DB_URL: postgres://postgres:postgres@db:5432/logs_db?sslmode=disable
