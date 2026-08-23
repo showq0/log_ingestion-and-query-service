@@ -1,7 +1,7 @@
 import { client } from "../index.js";
 import { NewLog } from "../schema.js";
 import { encodeCursor } from "../../utils.js";
-
+import { logQueue, } from "../../queue/logQueue.js";
 const PAGE_DEFAULT = 100;
 
 const BUCKET_INTERVALS: Record<string, string> = {
@@ -14,7 +14,9 @@ const BUCKET_INTERVALS: Record<string, string> = {
 export type Bucket = keyof typeof BUCKET_INTERVALS;
 
 export async function createLogs(logEntries: NewLog[]): Promise<void> {
-    if (logEntries.length === 0) return;
+    if (logEntries.length === 0) {
+        return;
+    }
     const rows = logEntries.map((log) => ({
         timestamp: log.timestamp.toISOString().replace("T", " ").replace("Z", ""),
         level: log.level,
@@ -26,14 +28,17 @@ export async function createLogs(logEntries: NewLog[]): Promise<void> {
             )
             : {},
     }));
-    // batch insert.
-    await client.insert({
-        table: "logs",
-        values: rows,
-        format: "JSONEachRow",
 
-    })
+
+    await logQueue.add(
+        "insert-logs",
+        {
+            rows: rows,
+        },
+    );
+
 }
+
 
 
 export async function filterLogs(
@@ -56,10 +61,17 @@ export async function filterLogs(
     const whereClause =
         conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
+    // NOTE: the formatted timestamp is aliased to `timestamp_formatted`
+    // rather than `timestamp`. Reusing the column name `timestamp` as the
+    // alias shadows the real `timestamp` column for the rest of the query —
+    // ClickHouse resolves the bare `timestamp` in WHERE/ORDER BY to this
+    // SELECT-list alias (a String) instead of the underlying DateTime64(3)
+    // column, which breaks any `timestamp >=/<=` filter (since/until/cursor)
+    // with "No operation greaterOrEquals between String and DateTime64(3)".
     const query = `
         SELECT
             id,
-            formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%s.%f', 'UTC') AS timestamp,
+            formatDateTime(timestamp, '%Y-%m-%dT%H:%i:%s.%f', 'UTC') AS timestamp_formatted,
             level,
             service,
             message,
@@ -81,7 +93,7 @@ export async function filterLogs(
 
     const rows = await result.json<{
         id: string;
-        timestamp: string;
+        timestamp_formatted: string;
         level: string;
         service: string;
         message: string;
@@ -89,21 +101,31 @@ export async function filterLogs(
     }>();
 
     const hasNextPage = rows.length > queryLimit;
-    const logsResult = rows.slice(0, queryLimit);
+    const trimmedRows = rows.slice(0, queryLimit);
 
-    // Format timestamps to ISO 8601
-    for (const log of logsResult) {
+    // Format timestamps to ISO 8601 and map back to the `timestamp` field
+    // name the API contract expects.
+    const logsResult = trimmedRows.map((row) => {
         // ClickHouse formatDateTime gives us something like "2026-08-01T12:30:45.123000"
         // Trim trailing zeros from microseconds and add Z
-        log.timestamp = log.timestamp.replace(/\.?0+$/, "") + "Z";
-        if (!log.timestamp.includes(".")) {
-            log.timestamp = log.timestamp.replace("Z", ".000Z");
+        let timestamp = row.timestamp_formatted.replace(/\.?0+$/, "") + "Z";
+        if (!timestamp.includes(".")) {
+            timestamp = timestamp.replace("Z", ".000Z");
         }
-    }
+        return {
+            id: row.id,
+            timestamp,
+            level: row.level,
+            service: row.service,
+            message: row.message,
+            attributes: row.attributes,
+        };
+    });
 
     const nextCursor = hasNextPage
         ? encodeCursor({
             timestamp: logsResult[logsResult.length - 1].timestamp,
+            id: logsResult[logsResult.length - 1].id
         })
         : null;
 
@@ -150,7 +172,7 @@ export async function aggregateLog(
     const query = `
         SELECT
             formatDateTime(${bucketFn}(timestamp), '%Y-%m-%dT%H:%i:%s', 'UTC') AS bucket,
-            ${groupColumn} AS group,
+            ${groupColumn} AS \`group\`,
             count() AS count
         FROM logs
         ${whereClause}

@@ -26,13 +26,17 @@ CREATE TABLE IF NOT EXISTS logs (
     attributes  Map(String, String)
 )
 ENGINE = MergeTree()
-PARTITION BY toYYYYMMDD(timestamp)
-ORDER BY (service, level, timestamp, id)
+ORDER BY (timestamp, id)
 
 `;
+// const Retention = `ALTER TABLE logs_db.logs
+// MODIFY TTL timestamp + INTERVAL 30 DAY;`
+
 
 export async function migrate(): Promise<void> {
     await client.command({ query: CREATE_LOGS_TABLE });
+    // await client.command({ query: Retention });
+
 
     console.log("ClickHouse migration completed — logs table ready");
 }
@@ -45,3 +49,16 @@ export type NewLog = {
     message: string;
     attributes?: Record<string, string | number | boolean> | null;
 };
+
+
+// const rows = logEntries.map((log) => ({
+//     timestamp: log.timestamp.toISOString().replace("T", " ").replace("Z", ""),
+//     level: log.level,
+//     service: log.service,
+//     message: log.message,
+//     attributes: log.attributes
+//         ? Object.fromEntries(
+//             Object.entries(log.attributes).map(([k, v]) => [k, String(v)]),
+//         )
+//         : {},
+// }));

@@ -1,6 +1,6 @@
 {
   "tool": "@foothill/logs-benchmark",
-  "generatedAt": "2026-08-21T00:35:10.578Z",
+  "generatedAt": "2026-08-23T00:09:43.603Z",
   "mode": "compose",
   "endpoint": "http://127.0.0.1:8080",
   "durationScale": 1,
@@ -17,13 +17,13 @@
     "memorySufficient": true
   },
   "machineSpeed": {
-    "workUnitsPerSecond": 36.873156342182895,
-    "factor": 0.7090991604265942
+    "workUnitsPerSecond": 35.319048740287265,
+    "factor": 0.6792124757747551
   },
   "correctness": {
-    "passed": 13,
+    "passed": 15,
     "total": 15,
-    "cap": 65,
+    "cap": null,
     "checks": [
       {
         "name": "health.status",
@@ -99,15 +99,15 @@
       },
       {
         "name": "aggregate.buckets",
-        "passed": false,
+        "passed": true,
         "expected": "time buckets contain correct counts",
-        "actual": "HTTP status 500"
+        "actual": "HTTP status 200"
       },
       {
         "name": "aggregate.grouping",
-        "passed": false,
+        "passed": true,
         "expected": "service and level grouping is supported",
-        "actual": "HTTP status 500"
+        "actual": "HTTP status 200"
       },
       {
         "name": "aggregate.invalid-options",
@@ -121,68 +121,68 @@
     {
       "scenario": "load",
       "status": "completed",
-      "logsPerSecond": 12800.833333333334,
+      "logsPerSecond": 13897.5,
       "errorRate": 0,
-      "latencyP95Ms": 1173.914709,
-      "aggregateP95Ms": 1190.45,
+      "latencyP95Ms": 11.963041599999961,
+      "aggregateP95Ms": 1193,
       "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
+      "thresholdPassed": true,
       "consistencyPassed": false,
-      "acceptedRecords": 1536100,
-      "visibleRecords": 0,
+      "acceptedRecords": 1667700,
+      "visibleRecords": 923700,
       "offeredLogsPerSecond": 15000,
-      "droppedIterations": 2638,
+      "droppedIterations": 1322,
       "generatorLimited": true,
       "serviceLimited": false
     },
     {
       "scenario": "stress",
       "status": "completed",
-      "logsPerSecond": 11288.666666666666,
+      "logsPerSecond": 19757.333333333332,
       "errorRate": 0,
-      "latencyP95Ms": 4244.4477102,
-      "aggregateP95Ms": 4218,
+      "latencyP95Ms": 305.9023229999997,
+      "aggregateP95Ms": 3065.3999999999987,
       "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
+      "thresholdPassed": true,
       "consistencyPassed": false,
-      "acceptedRecords": 1693300,
+      "acceptedRecords": 2963600,
       "visibleRecords": 0,
       "offeredLogsPerSecond": 21000,
-      "droppedIterations": 14566,
+      "droppedIterations": 1863,
       "generatorLimited": true,
       "serviceLimited": false
     },
     {
       "scenario": "spike",
       "status": "completed",
-      "logsPerSecond": 9767,
+      "logsPerSecond": 8706,
       "errorRate": 0,
-      "latencyP95Ms": 7722.8238832,
-      "aggregateP95Ms": 7934.399999999998,
+      "latencyP95Ms": 36135.28488874999,
+      "aggregateP95Ms": 26061.39999999995,
       "readAfterWriteSuccessRate": 0,
       "thresholdPassed": false,
       "consistencyPassed": false,
-      "acceptedRecords": 976700,
+      "acceptedRecords": 870600,
       "visibleRecords": 0,
       "offeredLogsPerSecond": 15375,
-      "droppedIterations": 5607,
+      "droppedIterations": 6668,
       "generatorLimited": true,
       "serviceLimited": false
     },
     {
       "scenario": "breakpoint",
       "status": "completed",
-      "logsPerSecond": 10580.833333333334,
+      "logsPerSecond": 22668.333333333332,
       "errorRate": 0,
-      "latencyP95Ms": 8490.9602368,
-      "aggregateP95Ms": 8510.5,
+      "latencyP95Ms": 2686.547334699999,
+      "aggregateP95Ms": 6071.999999999992,
       "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
+      "thresholdPassed": true,
       "consistencyPassed": false,
-      "acceptedRecords": 1269700,
+      "acceptedRecords": 2720200,
       "visibleRecords": 0,
       "offeredLogsPerSecond": 24375,
-      "droppedIterations": 16552,
+      "droppedIterations": 2047,
       "generatorLimited": true,
       "serviceLimited": false
     }
@@ -192,25 +192,25 @@
     "eligibility": {
       "eligible": true
     },
-    "score": 65,
+    "score": 78.53,
     "maximumScore": 100,
     "correctness": {
-      "points": 13,
+      "points": 15,
       "maximum": 15,
-      "percentage": 86.66666666666667,
+      "percentage": 100,
       "components": {
-        "passed": 13,
+        "passed": 15,
         "total": 15
       }
     },
     "performance": {
-      "points": 32.067777777777785,
+      "points": 43.53,
       "maximum": 50,
-      "percentage": 64.13555555555557,
+      "percentage": 87.06,
       "components": {
-        "throughput": 0.34135555555555563,
+        "throughput": 0.37060000000000004,
         "errors": 0.3,
-        "latency": 0,
+        "latency": 0.2,
         "sustainedBonus": 0
       }
     },
@@ -236,9 +236,9 @@
       }
     },
     "calculation": {
-      "correctnessRatio": 0.8666666666666667,
-      "uncappedScore": 65.06777777777779,
-      "appliedCap": 65
+      "correctnessRatio": 1,
+      "uncappedScore": 78.53,
+      "appliedCap": null
     }
   }
 }

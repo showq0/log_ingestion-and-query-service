@@ -6,20 +6,14 @@ const client = createClient({
     database: config.clickhouse.database,
     clickhouse_settings: {
         async_insert: 0,
-    }
-    // clickhouse_settings: {
-    //     max_insert_block_size: 8192,
-    //     min_insert_block_size_rows: 4096,
-    //     min_insert_block_size_bytes: 8_388_608,
-    //     input_format_parallel_parsing: 0,
-    //     max_insert_threads: 1,
-    //     max_memory_usage: 400_000_000,
-    // },
+        max_insert_threads: "1",
+    },
 });
 
 const TOTAL_LOGS = 1_000_000;
-// 1GiB ClickHouse: stay at the low end of the 1,000–10,000 sync-insert range.
-const BATCH_SIZE = 8_000;
+
+// Keep INSERT batches small because ClickHouse is limited to ~1 GiB.
+const BATCH_SIZE = 15000
 
 // Historical data: July 1 → July 31, 2026
 const START_DATE = new Date("2026-07-01T00:00:00.000Z");
@@ -91,6 +85,16 @@ function createLog() {
 async function seed() {
     console.log(
         `Seeding ${TOTAL_LOGS.toLocaleString()} logs into ClickHouse...`,
+    );
+
+    console.log(
+        `Batch size: ${BATCH_SIZE.toLocaleString()}`,
+    );
+
+    console.log(
+        `Expected batches: ${Math.ceil(
+            TOTAL_LOGS / BATCH_SIZE,
+        ).toLocaleString()}`,
     );
 
     console.log(

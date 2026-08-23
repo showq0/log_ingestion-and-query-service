@@ -73,4 +73,5 @@ export type ValidationResult = {
 
 export type Cursor = {
     timestamp: string;
+    id: string
 };
