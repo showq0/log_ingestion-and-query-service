@@ -85,23 +85,11 @@ export function createAggLogConditions(
     const conditions: string[] = [];
     const params: Record<string, unknown> = {};
 
-    conditions.push(
-        "timestamp >= toDateTime64({since:String}, 3, 'UTC')"
-    );
+    conditions.push("timestamp > toDateTime64({since:String}, 3, 'UTC')");
+    params.since = parameter.since.toISOString().replace("T", " ").replace("Z", "");
 
-    params.since = parameter.since
-        .toISOString()
-        .replace("T", " ")
-        .replace("Z", "");
-
-    conditions.push(
-        "timestamp < toDateTime64({until:String}, 3, 'UTC')"
-    );
-
-    params.until = parameter.until
-        .toISOString()
-        .replace("T", " ")
-        .replace("Z", "");
+    conditions.push("timestamp < toDateTime64({until:String}, 3, 'UTC')");
+    params.until = parameter.until.toISOString().replace("T", " ").replace("Z", "");
 
     if (parameter.service) {
         conditions.push("service = {service:String}");

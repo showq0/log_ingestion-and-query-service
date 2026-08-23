@@ -2,6 +2,7 @@ import { client } from "../index.js";
 import { NewLog } from "../schema.js";
 import { encodeCursor } from "../../utils.js";
 import { logQueue, } from "../../queue/logQueue.js";
+import crypto from "node:crypto";
 const PAGE_DEFAULT = 100;
 
 const BUCKET_INTERVALS: Record<string, string> = {
@@ -13,18 +14,13 @@ const BUCKET_INTERVALS: Record<string, string> = {
 
 export type Bucket = keyof typeof BUCKET_INTERVALS;
 
-import crypto from "node:crypto";
-
-export async function createLogs(
-    logEntries: NewLog[],
-) {
+export async function createLogs(logEntries: NewLog[]) {
     if (logEntries.length === 0) {
         return null;
     }
 
     const rows = logEntries.map((log) => ({
         id: crypto.randomUUID(),
-
         timestamp: log.timestamp.toISOString().replace("T", " ").replace("Z", ""),
 
         level: log.level,
@@ -41,18 +37,12 @@ export async function createLogs(
             : {},
     }));
 
-    return logQueue.add(
+
+    return await logQueue.add(
         "insert-logs",
         { rows },
         {
             attempts: 20,
-            backoff: {
-                type: "exponential",
-                delay: 1000,
-            },
-            removeOnComplete: {
-                age: 3600,
-            },
             removeOnFail: false,
         },
     );

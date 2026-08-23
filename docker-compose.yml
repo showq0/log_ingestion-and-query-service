@@ -18,27 +18,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: npm run worker
-    environment:
-      CLICKHOUSE_URL: http://db:8123
-      CLICKHOUSE_DB: logs_db
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    command: sh -c "npm run build && npm run dev & npm run worker"
     deploy:
       resources:
         limits:
@@ -49,12 +29,16 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    command: >
+      redis-server 
+      --maxmemory 450mb 
+      --maxmemory-policy allkeys-lru 
+      --save ""
     deploy:
       resources:
         limits:
           cpus: "0.25"
           memory: 256M
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
