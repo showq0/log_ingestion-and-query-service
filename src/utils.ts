@@ -80,23 +80,40 @@ export function validateQueryParameter(
     };
 }
 
-export function validateAggQueryParameter(entryQueryParameter: {}): { success: boolean; error?: string, data?: z.infer<typeof logAggrigatorSchema> } {
+export function validateAggQueryParameter(
+    entryQueryParameter: Record<string, unknown>
+): {
+    success: boolean;
+    error?: unknown;
+    data?: z.infer<typeof logAggrigatorSchema>;
+} {
+    const queryParameter =
+        logAggrigatorSchema.safeParse(entryQueryParameter);
 
-    const queryParameter = logAggrigatorSchema.safeParse(entryQueryParameter);
-    if (queryParameter.success) {
-        if (queryParameter.data.since > queryParameter.data.until) {
-            return { success: true, error: "until must be later than since" };
-        }
-        return { success: true, data: queryParameter.data };
+    if (!queryParameter.success) {
+        return {
+            success: false,
+            error: queryParameter.error.issues.map((error) => ({
+                path: error.path.join("."),
+                message: error.message,
+            })),
+        };
     }
-    const errors = JSON.parse(queryParameter.error.message);
+
+    if (queryParameter.data.since >= queryParameter.data.until) {
+        return {
+            success: false,
+            error: [
+                {
+                    path: "until",
+                    message: "until must be later than since",
+                },
+            ],
+        };
+    }
 
     return {
-        success: false,
-        error: errors.map((error: { path: string[]; message: string }) => ({
-            path: error.path.join("."),
-            message: error.message,
-        }
-        ))
+        success: true,
+        data: queryParameter.data,
     };
 }

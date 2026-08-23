@@ -148,30 +148,42 @@ export async function aggregateLog(
     }>
 > {
     const bucketFn = BUCKET_INTERVALS[bucket];
+
     if (!bucketFn) {
         throw new Error(`Unknown bucket interval: ${bucket}`);
     }
 
     const whereClause =
-        conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+        conditions.length > 0
+            ? `WHERE ${conditions.join(" AND ")}`
+            : "";
 
     let groupColumn: string;
     let groupByClause: string;
 
-    if (groupBy === "service") {
-        groupColumn = "service";
-        groupByClause = "GROUP BY bucket, service ORDER BY bucket";
-    } else if (groupBy === "level") {
-        groupColumn = "level";
-        groupByClause = "GROUP BY bucket, level ORDER BY bucket";
-    } else {
-        groupColumn = "NULL";
-        groupByClause = "GROUP BY bucket ORDER BY bucket";
+    switch (groupBy) {
+        case "service":
+            groupColumn = "service";
+            groupByClause =
+                "GROUP BY bucket, service ORDER BY bucket ASC, service ASC";
+            break;
+
+        case "level":
+            groupColumn = "level";
+            groupByClause =
+                "GROUP BY bucket, level ORDER BY bucket ASC, level ASC";
+            break;
+
+        default:
+            groupColumn = "NULL";
+            groupByClause =
+                "GROUP BY bucket ORDER BY bucket ASC";
+            break;
     }
 
     const query = `
         SELECT
-            formatDateTime(${bucketFn}(timestamp), '%Y-%m-%dT%H:%i:%s', 'UTC') AS bucket,
+            ${bucketFn}(timestamp) AS bucket,
             ${groupColumn} AS \`group\`,
             count() AS count
         FROM logs
@@ -192,7 +204,7 @@ export async function aggregateLog(
     }>();
 
     return rows.map((row) => ({
-        start: row.bucket + "Z",
+        start: new Date(row.bucket).toISOString(),
         group: row.group,
         count: Number(row.count),
     }));

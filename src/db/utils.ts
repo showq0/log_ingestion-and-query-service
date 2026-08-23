@@ -78,15 +78,30 @@ export function createLogConditions(
 export function createAggLogConditions(
     parameter: z.infer<typeof logAggrigatorSchema>,
     attribute: Record<string, string>,
-): { conditions: string[]; params: Record<string, unknown> } {
+): {
+    conditions: string[];
+    params: Record<string, unknown>;
+} {
     const conditions: string[] = [];
     const params: Record<string, unknown> = {};
 
-    conditions.push("timestamp < toDateTime64({until:String}, 3, 'UTC')");
-    params.since = parameter.since.toISOString().replace("T", " ").replace("Z", "");
+    conditions.push(
+        "timestamp >= toDateTime64({since:String}, 3, 'UTC')"
+    );
 
-    conditions.push("timestamp < toDateTime64({until:String}, 3, 'UTC')");
-    params.until = parameter.until.toISOString().replace("T", " ").replace("Z", "");
+    params.since = parameter.since
+        .toISOString()
+        .replace("T", " ")
+        .replace("Z", "");
+
+    conditions.push(
+        "timestamp < toDateTime64({until:String}, 3, 'UTC')"
+    );
+
+    params.until = parameter.until
+        .toISOString()
+        .replace("T", " ")
+        .replace("Z", "");
 
     if (parameter.service) {
         conditions.push("service = {service:String}");
@@ -103,16 +118,24 @@ export function createAggLogConditions(
         params.q = `%${parameter.q}%`;
     }
 
-    // Attribute filters
     let attrIndex = 0;
+
     for (const [key, value] of Object.entries(attribute)) {
         const paramKey = `attr_key_${attrIndex}`;
         const paramVal = `attr_val_${attrIndex}`;
-        conditions.push(`attributes[{${paramKey}:String}] = {${paramVal}:String}`);
+
+        conditions.push(
+            `attributes[{${paramKey}:String}] = {${paramVal}:String}`
+        );
+
         params[paramKey] = key;
         params[paramVal] = value;
+
         attrIndex++;
     }
 
-    return { conditions, params };
+    return {
+        conditions,
+        params,
+    };
 }
