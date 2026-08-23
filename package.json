@@ -7,9 +7,8 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "npx tsc && node dist/index.js",
-    "generate": "drizzle-kit generate",
-    "migrate": "drizzle-kit migrate",
-    "seedlogs": "tsx scripts/seed-logs.ts"
+    "seedlogs": "tsx scripts/seed-logs.ts",
+    "worker": "tsx src/queue/logWorker.ts"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +19,6 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@vitest/coverage-v8": "^4.1.10",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.1",
     "prettier": "^3.9.6",
     "tsx": "^4.23.11",
@@ -28,9 +26,10 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2",
+    "@clickhouse/client": "^1.23.1",
+    "bullmq": "^6.2.0",
     "express": "^5.2.1",
-    "postgres": "^3.4.9",
+    "ioredis": "^6.0.0",
     "zod": "^4.4.3"
   }
 }

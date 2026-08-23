@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { NewLog } from "./db/schema.js";
-import { sql } from "drizzle-orm";
 
 export const logQuerySchema = z.object({
     service: z.string().optional(),
@@ -57,6 +55,16 @@ export type InvalidLog = {
     reason: string;
 };
 
+// Standalone type — no longer depends on Drizzle's $inferInsert
+export type NewLog = {
+    id?: string;
+    timestamp: Date;
+    level: string;
+    service: string;
+    message: string;
+    attributes?: Record<string, string | number | boolean> | null;
+};
+
 export type ValidationResult = {
     valid: NewLog[];
     invalid: InvalidLog[];
@@ -65,4 +73,5 @@ export type ValidationResult = {
 
 export type Cursor = {
     timestamp: string;
+    id: string
 };

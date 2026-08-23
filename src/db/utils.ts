@@ -1,91 +1,129 @@
-import { SQL, eq, gte, lt, lte, ilike, sql, and } from "drizzle-orm";
-import { logs } from "./schema.js";
-import { decodeCursor } from "../utils.js"
-import { logQuerySchema, logAggrigatorSchema } from "../type.js"
-import { z } from "zod"
+import { z } from "zod";
+import { logQuerySchema, logAggrigatorSchema } from "../type.js";
+import { decodeCursor } from "../utils.js";
 
-export function createLogConditions(parameter: z.infer<typeof logQuerySchema>, attribute: {}): SQL[] {
-    //GET /logs?service=checkout&level=error&attr.user_id=42&attr.region=eu-west
-    const conditions: SQL[] = [];
-    //Exact service-name match
+/**
+ * Build ClickHouse WHERE conditions for log queries.
+ * Returns an array of SQL condition strings and a params object for parameterized queries.
+ *
+ * Uses ClickHouse parameterized query syntax: {paramName:Type}
+ */
+export function createLogConditions(
+    parameter: z.infer<typeof logQuerySchema>,
+    attribute: Record<string, string>,
+): {
+    conditions: string[];
+    params: Record<string, unknown>;
+} {
+    const conditions: string[] = [];
+    const params: Record<string, unknown> = {};
+
     if (parameter.service) {
-        conditions.push(
-            eq(logs.service, parameter.service),
-        );
+        conditions.push("service = {service:String}");
+        params.service = parameter.service;
     }
-    //Exact level match
+
     if (parameter.level) {
-        conditions.push(
-            eq(logs.level, parameter.level),
-        );
+        conditions.push("level = {level:String}");
+        params.level = parameter.level;
     }
-    //Inclusive start of the time range
+
     if (parameter.since) {
-        conditions.push(
-            gte(logs.timestamp, parameter.since),
-        );
+        conditions.push("timestamp >= toDateTime64({since:String}, 3, 'UTC')");
+        params.since = parameter.since.toISOString().replace("T", " ").replace("Z", "");
     }
-    //Exclusive end of the time range
+
     if (parameter.until) {
-        conditions.push(
-            lt(logs.timestamp, parameter.until));
+        conditions.push("timestamp < toDateTime64({until:String}, 3, 'UTC')");
+        params.until = parameter.until.toISOString().replace("T", " ").replace("Z", "");
     }
-    //Case-insensitive substring match ilike
+
     if (parameter.q) {
-        conditions.push(
-            ilike(logs.message, `%${parameter.q}%`),
-        );
+        conditions.push("message ILIKE {q:String}");
+        params.q = `%${parameter.q}%`;
     }
+
     if (parameter.cursor) {
         const cursorInfo = decodeCursor(parameter.cursor);
-        const cursorTimestamp = new Date(cursorInfo.timestamp);
-        conditions.push(lte(logs.timestamp, cursorTimestamp))
-    }
-    for (const [key, value] of Object.entries(attribute)) {
-        conditions.push(
-            // access attribute
-            sql`${logs.attributes}->>${key} = ${value}`,
-        );
+        conditions.push("timestamp <= toDateTime64({cursor_ts:String}, 3, 'UTC')");
+        const ts = new Date(cursorInfo.timestamp);
+        params.cursor_ts = ts.toISOString().replace("T", " ").replace("Z", "");
     }
 
-    return conditions;
+    let attrIndex = 0;
+
+    for (const [key, value] of Object.entries(attribute)) {
+        const keyParam = `attr_key_${attrIndex}`;
+        const valueParam = `attr_val_${attrIndex}`;
+
+        conditions.push(
+            `attributes[{${keyParam}:String}] = {${valueParam}:String}`,
+        );
+
+        params[keyParam] = key;
+        params[valueParam] = value;
+
+        attrIndex++;
+    }
+
+    return {
+        conditions,
+        params,
+    };
 }
 
-export function createAggLogConditions(parameter: z.infer<typeof logAggrigatorSchema>, attribute: {}): SQL[] {
-    const conditions: SQL[] = [];
+/**
+ * Build ClickHouse WHERE conditions for aggregation queries.
+ */
+export function createAggLogConditions(
+    parameter: z.infer<typeof logAggrigatorSchema>,
+    attribute: Record<string, string>,
+): {
+    conditions: string[];
+    params: Record<string, unknown>;
+} {
+    const conditions: string[] = [];
+    const params: Record<string, unknown> = {};
 
-    conditions.push(
-        gte(logs.timestamp, parameter.since),
-    );
+    conditions.push("timestamp > toDateTime64({since:String}, 3, 'UTC')");
+    params.since = parameter.since.toISOString().replace("T", " ").replace("Z", "");
 
-    conditions.push(
-        lt(logs.timestamp, parameter.until),
-    );
+    conditions.push("timestamp < toDateTime64({until:String}, 3, 'UTC')");
+    params.until = parameter.until.toISOString().replace("T", " ").replace("Z", "");
 
     if (parameter.service) {
-        conditions.push(
-            eq(logs.service, parameter.service),
-        );
-    }
-    if (parameter.level) {
-        conditions.push(
-            eq(logs.level, parameter.level),
-        );
+        conditions.push("service = {service:String}");
+        params.service = parameter.service;
     }
 
-    //Case-insensitive substring match ilike
-    if (parameter.q) {
-        conditions.push(
-            ilike(logs.message, `%${parameter.q}%`),
-        );
+    if (parameter.level) {
+        conditions.push("level = {level:String}");
+        params.level = parameter.level;
     }
+
+    if (parameter.q) {
+        conditions.push("message ILIKE {q:String}");
+        params.q = `%${parameter.q}%`;
+    }
+
+    let attrIndex = 0;
 
     for (const [key, value] of Object.entries(attribute)) {
+        const paramKey = `attr_key_${attrIndex}`;
+        const paramVal = `attr_val_${attrIndex}`;
+
         conditions.push(
-            // access attribute
-            sql`${logs.attributes}->>${key} = ${value}`,
+            `attributes[{${paramKey}:String}] = {${paramVal}:String}`
         );
+
+        params[paramKey] = key;
+        params[paramVal] = value;
+
+        attrIndex++;
     }
 
-    return conditions;
+    return {
+        conditions,
+        params,
+    };
 }
