@@ -90,6 +90,7 @@ Ingests a batch of logs.
   ]
 }
 ```
+![](image.png)
 
 **Each entry must satisfy:**
 
@@ -205,7 +206,7 @@ Example response:
 
 The final storage model is optimized around the workload’s dominant access pattern: **time-series log ingestion and time-range aggregation**.
 
-!image.png
+![](schema.jpg)
 
 **MergeTree** was selected because the system needs high-volume log ingestion and aggregation queries under 1 second. It handles inserts efficiently through background merging, while columnar storage and the sparse index reduce the data scanned during filtered aggregations.
 
