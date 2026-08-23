@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { client } from "../db/index.js";
 
-export const INSERT_BATCH_SIZE = 5000;
+export const INSERT_BATCH_SIZE = 15000;
 
 const connection = {
     host: process.env.REDIS_HOST ?? "localhost",
@@ -31,11 +31,7 @@ export const worker = new Worker<LogJob>(
             return;
         }
 
-        for (
-            let i = 0;
-            i < rows.length;
-            i += INSERT_BATCH_SIZE
-        ) {
+        for (let i = 0; i < rows.length; i += INSERT_BATCH_SIZE) {
             const batch = rows.slice(
                 i,
                 i + INSERT_BATCH_SIZE,
