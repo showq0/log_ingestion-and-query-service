@@ -1,5 +1,3 @@
-// workers/logWorker.ts
-
 import { Worker } from "bullmq";
 import { client } from "../db/index.js";
 
@@ -10,30 +8,37 @@ const connection = {
     port: Number(process.env.REDIS_PORT ?? 6379),
 };
 
-type LogJob = {
-    rows: Array<{
-        timestamp: string;
-        level: string;
-        service: string;
-        message: string;
-        attributes?: Record<string, string>;
-    }>;
+type LogRow = {
+    id: string;
+    timestamp: string;
+    level: string;
+    service: string;
+    message: string;
+    attributes?: Record<string, string>;
 };
 
+type LogJob = {
+    rows: LogRow[];
+};
 
-const worker = new Worker<LogJob>(
+export const worker = new Worker<LogJob>(
     "logs",
     async (job) => {
-        const rows = job.data.rows;
+        const { rows } = job.data;
 
-        if (!rows || rows.length === 0) {
+        if (!rows.length) {
             return;
         }
-        // Safety net:
-        // even if a producer accidentally sends a larger job,
-        // never send the whole job to ClickHouse.
-        for (let i = 0; i < rows.length; i += INSERT_BATCH_SIZE) {
-            const batch = rows.slice(i, i + INSERT_BATCH_SIZE);
+
+        for (
+            let i = 0;
+            i < rows.length;
+            i += INSERT_BATCH_SIZE
+        ) {
+            const batch = rows.slice(
+                i,
+                i + INSERT_BATCH_SIZE,
+            );
 
             await client.insert({
                 table: "logs",
@@ -47,18 +52,14 @@ const worker = new Worker<LogJob>(
             );
         }
     },
-
     {
         connection,
 
-        // CRITICAL:
-        // only one ClickHouse INSERT at a time.
         concurrency: 1,
 
-        // Don't let BullMQ wait forever for a broken ClickHouse connection.
-        lockDuration: 500,
+        // 3 seconds is too short.
+        lockDuration: 60_000,
 
-        // Retry failed jobs.
         maxStalledCount: 2,
     },
 );
@@ -72,8 +73,4 @@ worker.on("failed", (job, error) => {
         `[logs] job ${job?.id} failed:`,
         error,
     );
-});
-
-worker.on("error", (error) => {
-    console.error("[logs] worker error:", error);
 });

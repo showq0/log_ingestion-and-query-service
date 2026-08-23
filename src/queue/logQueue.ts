@@ -1,4 +1,4 @@
-import { Queue } from "bullmq";
+import { Queue, QueueEvents } from "bullmq";
 
 const connection = {
     host: process.env.REDIS_HOST ?? "localhost",
@@ -6,5 +6,9 @@ const connection = {
 };
 
 export const logQueue = new Queue("logs", {
+    connection,
+});
+
+export const logQueueEvents = new QueueEvents("logs", {
     connection,
 });

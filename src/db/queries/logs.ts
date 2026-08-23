@@ -13,30 +13,49 @@ const BUCKET_INTERVALS: Record<string, string> = {
 
 export type Bucket = keyof typeof BUCKET_INTERVALS;
 
-export async function createLogs(logEntries: NewLog[]): Promise<void> {
+import crypto from "node:crypto";
+
+export async function createLogs(
+    logEntries: NewLog[],
+) {
     if (logEntries.length === 0) {
-        return;
+        return null;
     }
+
     const rows = logEntries.map((log) => ({
+        id: crypto.randomUUID(),
+
         timestamp: log.timestamp.toISOString().replace("T", " ").replace("Z", ""),
+
         level: log.level,
         service: log.service,
         message: log.message,
+
         attributes: log.attributes
             ? Object.fromEntries(
-                Object.entries(log.attributes).map(([k, v]) => [k, String(v)]),
+                Object.entries(log.attributes).map(([k, v]) => [
+                    k,
+                    String(v),
+                ]),
             )
             : {},
     }));
 
-
-    await logQueue.add(
+    return logQueue.add(
         "insert-logs",
+        { rows },
         {
-            rows: rows,
+            attempts: 20,
+            backoff: {
+                type: "exponential",
+                delay: 1000,
+            },
+            removeOnComplete: {
+                age: 3600,
+            },
+            removeOnFail: false,
         },
     );
-
 }
 
 
