@@ -16,8 +16,7 @@ The service provides:
 The final implementation uses a queue-based ingestion pipeline:
 
 The service uses an **asynchronous, queue-based ingestion architecture** to decouple log ingestion from persistent storage.
-
-!image.png
+![](image.png)
 
 ### Components
 
@@ -84,7 +83,6 @@ Ingests a batch of logs.
   ]
 }
 ```
-![](image.png)
 
 **Each entry must satisfy:**
 
