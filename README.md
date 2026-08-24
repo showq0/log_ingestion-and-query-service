@@ -32,10 +32,7 @@ The service uses an **asynchronous, queue-based ingestion architecture** to de
 # Setup Instructions
 
 ## Prerequisites
-
-- Docker
-- Docker Compose
-- Git
+Docker, Docker Compose, Git
 
 The project is designed to run using Docker Compose.
 
@@ -48,9 +45,6 @@ docker compose up --build
 application container is exposed through `localhost:8080`. 
 
 **Health Check:**  `curl http://localhost:8080/health`
-
-Expected result:`HTTP 200`
-
 ---
 
 # API Documentation
