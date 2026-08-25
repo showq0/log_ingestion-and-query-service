@@ -314,18 +314,14 @@ Aggregation query performance remained the primary bottleneck. The measured agg
 ## **Known Limitations**
 
 **Limitation:** Newly accepted logs may not be immediately available for querying.
-
+**Effect:** There can be a short delay between accepting a log and making it queryable.
 **Why:** Logs are processed asynchronously through Redis/BullMQ before being inserted into ClickHouse.
 
 ---
 
-**Effect:** There can be a short delay between accepting a log and making it queryable.
-
 **Limitation:** Performance is constrained by the available resources.
-
-**Why:** The benchmark runs with a defined CPU and 1 GB ClickHouse memory limit
-
 **Effect:** Higher ingestion rates may require additional resources or tuning.
+**Why:** The benchmark runs with a defined CPU and 1 GB ClickHouse memory limit
 
 ---
 
