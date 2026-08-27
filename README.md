@@ -157,7 +157,7 @@ GET /logs?service=checkout&level=error&since=2026-07-20T14:00:00Z&until=2026-07-
 
 ---
 
-# GET `/logs/aggregate`
+## GET `/logs/aggregate`
 
 Divides the specified time range into fixed intervals (buckets) such as **1 minute, 5 minutes, 1 hour, or 1 day**, then aggregates the matching logs within each interval and *optionally* groups the results by service or another supported dimension.
 
