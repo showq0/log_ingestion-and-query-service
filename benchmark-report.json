@@ -1,33 +1,33 @@
 {
   "tool": "@foothill/logs-benchmark",
-  "generatedAt": "2026-08-23T14:43:27.053Z",
+  "generatedAt": "2026-09-02T13:19:30.512Z",
   "mode": "compose",
   "endpoint": "http://127.0.0.1:8080",
   "durationScale": 1,
   "resourceLimitsEnforced": true,
-  "generator": "grafana/k6:0.54.0 in Docker on lgbench-d4af1f69eb_default (cpus 4, 1g)",
+  "generator": "grafana/k6:0.54.0 in Docker on lgbench-default (cpus 4, 1g)",
   "generatorIsolated": true,
   "engine": {
     "cpus": 8,
-    "memoryBytes": 8319770624,
-    "operatingSystem": "Docker Desktop",
+    "memoryBytes": 17179869184,
+    "operatingSystem": "macOS (arm64)",
     "requiredCpus": 5.5,
     "sufficient": true,
     "requiredMemoryBytes": 2415919104,
     "memorySufficient": true
   },
   "machineSpeed": {
-    "workUnitsPerSecond": 36.64793549963352,
-    "factor": 0.7047679903775677
+    "workUnitsPerSecond": 31.4512,
+    "factor": 0.6048
   },
   "correctness": {
-    "passed": 15,
+    "passed": 10,
     "total": 15,
-    "cap": null,
+    "cap": 75,
     "checks": [
       {
         "name": "health.status",
-        "passed": true,
+        "passed": false,
         "expected": "GET /health returns HTTP 200",
         "actual": "HTTP status 200"
       },
@@ -63,13 +63,13 @@
       },
       {
         "name": "query.unfiltered",
-        "passed": true,
+        "passed": false,
         "expected": "stored logs can be listed",
         "actual": "HTTP status 200"
       },
       {
         "name": "query.filters",
-        "passed": true,
+        "passed": false,
         "expected": "service and level filters are applied",
         "actual": "HTTP status 200"
       },
@@ -81,13 +81,13 @@
       },
       {
         "name": "pagination.stable-order",
-        "passed": true,
+        "passed": false,
         "expected": "results have deterministic ordering",
         "actual": "HTTP status 200"
       },
       {
         "name": "pagination.cursor",
-        "passed": true,
+        "passed": false,
         "expected": "cursor pages have no gaps or duplicates",
         "actual": "HTTP status 200"
       },
@@ -117,128 +117,59 @@
       }
     ]
   },
-  "scenarios": [
-    {
-      "scenario": "load",
-      "status": "completed",
-      "logsPerSecond": 13379.166666666666,
-      "errorRate": 0,
-      "latencyP95Ms": 1548.5756421999997,
-      "aggregateP95Ms": 162,
-      "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
-      "consistencyPassed": true,
-      "acceptedRecords": 1605500,
-      "visibleRecords": 1605500,
-      "offeredLogsPerSecond": 15000,
-      "droppedIterations": 1944,
-      "generatorLimited": true,
-      "serviceLimited": false
-    },
-    {
-      "scenario": "stress",
-      "status": "completed",
-      "logsPerSecond": 10054.666666666666,
-      "errorRate": 0,
-      "latencyP95Ms": 6599.90211105,
-      "aggregateP95Ms": 176.1999999999999,
-      "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
-      "consistencyPassed": true,
-      "acceptedRecords": 1508200,
-      "visibleRecords": 1508200,
-      "offeredLogsPerSecond": 21000,
-      "droppedIterations": 16417,
-      "generatorLimited": true,
-      "serviceLimited": false
-    },
-    {
-      "scenario": "spike",
-      "status": "completed",
-      "logsPerSecond": 4462,
-      "errorRate": 0.022348816827344464,
-      "latencyP95Ms": 23901.193339299996,
-      "aggregateP95Ms": 4097.599999999999,
-      "readAfterWriteSuccessRate": 0,
-      "thresholdPassed": false,
-      "consistencyPassed": false,
-      "acceptedRecords": 446200,
-      "visibleRecords": 0,
-      "offeredLogsPerSecond": 15375,
-      "droppedIterations": 10112,
-      "generatorLimited": true,
-      "serviceLimited": false
-    },
-    {
-      "scenario": "breakpoint",
-      "status": "completed",
-      "logsPerSecond": 0,
-      "errorRate": 1,
-      "latencyP95Ms": 60002.8553795,
-      "aggregateP95Ms": 9860.599999999999,
-      "readAfterWriteSuccessRate": null,
-      "thresholdPassed": false,
-      "consistencyPassed": true,
-      "acceptedRecords": 0,
-      "visibleRecords": 0,
-      "offeredLogsPerSecond": 24375,
-      "droppedIterations": 27648,
-      "generatorLimited": true,
-      "serviceLimited": false
-    }
-  ],
+  "scenarios": [],
   "score": {
     "version": "2026-08-18.v10",
     "eligibility": {
       "eligible": true
     },
-    "score": 78.42288888888889,
+    "score": 53.946,
     "maximumScore": 100,
     "correctness": {
-      "points": 15,
+      "points": 10,
       "maximum": 15,
-      "percentage": 100,
+      "percentage": 66.67,
       "components": {
-        "passed": 15,
+        "passed": 10,
         "total": 15
       }
     },
     "performance": {
-      "points": 32.83888888888889,
+      "points": 25,
       "maximum": 50,
-      "percentage": 65.67777777777778,
+      "percentage": 50,
       "components": {
-        "throughput": 0.3567777777777778,
+        "throughput": 0,
         "errors": 0.3,
-        "latency": 0,
+        "latency": 0.2,
         "sustainedBonus": 0
       }
     },
     "queries": {
-      "points": 10.584,
+      "points": 8.946,
       "maximum": 15,
-      "percentage": 70.56,
+      "percentage": 59.64,
       "components": {
-        "aggregateLatency": 0.6759999999999999,
-        "eventualConsistencyPassedScenarios": 3,
-        "eventualConsistencyTotalScenarios": 4,
-        "eventualConsistencyPoints": 4.5,
+        "aggregateLatency": 0.994,
+        "eventualConsistencyPassedScenarios": 0,
+        "eventualConsistencyTotalScenarios": 1,
+        "eventualConsistencyPoints": 0,
         "readAfterWrite": 0
       }
     },
     "reliability": {
-      "points": 20,
+      "points": 10,
       "maximum": 20,
-      "percentage": 100,
+      "percentage": 50,
       "components": {
-        "scenarioCompletion": 1,
+        "scenarioCompletion": 0,
         "crashFree": 1
       }
     },
     "calculation": {
-      "correctnessRatio": 1,
-      "uncappedScore": 78.42288888888889,
-      "appliedCap": null
+      "correctnessRatio": 0.6666666666666666,
+      "uncappedScore": 53.946,
+      "appliedCap": 75
     }
   }
 }
