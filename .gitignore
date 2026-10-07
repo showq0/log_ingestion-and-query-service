@@ -5,3 +5,6 @@ dist/
 server.log
 .env
 test.txt
+benchmark-results/
+tests/results/
+benchmark-report.json

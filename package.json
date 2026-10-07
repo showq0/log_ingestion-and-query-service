@@ -8,7 +8,13 @@
     "start": "node dist/index.js",
     "dev": "npx tsc && node dist/index.js",
     "seedlogs": "tsx scripts/seed-logs.ts",
-    "worker": "tsx src/queue/logWorker.ts"
+    "worker": "tsx src/queue/logWorker.ts",
+    "benchmark": "tsx src/benchmark/cli.ts",
+    "benchmark:quick": "bash scripts/benchmark/quick.sh",
+    "benchmark:full": "bash scripts/benchmark/full.sh",
+    "benchmark:correctness": "bash scripts/benchmark/correctness.sh",
+    "benchmark:performance": "bash scripts/benchmark/performance.sh",
+    "benchmark:summarize": "bash scripts/benchmark/summarize.sh"
   },
   "keywords": [],
   "author": "",

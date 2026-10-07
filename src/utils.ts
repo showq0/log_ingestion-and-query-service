@@ -37,6 +37,9 @@ export function decodeCursor(cursor: string): Cursor {
     try {
         const decoded = Buffer.from(cursor, "base64url").toString("utf8");
         const parsed = JSON.parse(decoded);
+        if (!parsed || typeof parsed.timestamp !== "string" || typeof parsed.id !== "string") {
+            throw new Error("missing cursor fields");
+        }
         return parsed;
     } catch {
         throw new errors.BadRequestError("Invalid cursor");

@@ -1,0 +1,96 @@
+openapi: 3.1.0
+
+info:
+  title: Log Ingestion API
+  version: 1.0.0
+  license:
+      name: Proprietary
+      identifier: LicenseRef-Proprietary
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /logs:
+    post:
+      summary: Ingest log records
+      operationId: createLogs
+      security: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLogsRequest'
+
+      responses:
+        '200':
+          description: Logs successfully processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateLogsResponse'
+
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateLogsRequest:
+      type: object
+      required:
+        - logs
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Log'
+
+    Log:
+      type: object
+      required:
+        - timestamp
+        - level
+        - service
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+        service:
+          type: string
+          minLength: 1
+        message:
+          type: string
+          minLength: 1
+        attributes:
+          type: object
+
+    CreateLogsResponse:
+      type: object
+      required:
+        - accepted
+        - rejected
+      properties:
+        accepted:
+          type: integer
+          minimum: 0
+        rejected:
+          type: array
+          items: {}
+
+    ErrorResponse:
+      type: object

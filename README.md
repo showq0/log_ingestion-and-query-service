@@ -44,6 +44,34 @@ docker compose up --build
 application container is exposed through `localhost:8080`. 
 
 **Health Check:**  `curl http://localhost:8080/health`
+
+---
+
+# Benchmark Suite
+
+The k6 benchmark runner uses `grafana/k6:0.54.0` in Docker (4 CPUs, 1 GB, isolated bridge) against `http://127.0.0.1:8080` by default.
+
+Start the service, then run:
+
+```bash
+docker compose up --build
+npm run benchmark:correctness
+npm run benchmark:quick
+npm run benchmark:full
+```
+
+`benchmark:full` seeds 1,000,000 logs over the previous 30 days, then runs load, stress, spike, and breakpoint scenarios. Reports are written to `benchmark-report.json`.
+
+Optional environment:
+
+- `BASE_URL` — target API (default `http://127.0.0.1:8080`)
+- `DURATION_SCALE` — scale scenario durations (quick mode uses `0.1`)
+- `SEED_SIZE` — seed dataset size (full default `1000000`)
+
+```bash
+npm run benchmark:summarize
+```
+
 ---
 
 # API Documentation

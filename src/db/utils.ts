@@ -45,9 +45,12 @@ export function createLogConditions(
 
     if (parameter.cursor) {
         const cursorInfo = decodeCursor(parameter.cursor);
-        conditions.push("timestamp <= toDateTime64({cursor_ts:String}, 3, 'UTC')");
+        conditions.push(
+            `(timestamp < toDateTime64({cursor_ts:String}, 3, 'UTC') OR (timestamp = toDateTime64({cursor_ts:String}, 3, 'UTC') AND id < toUUID({cursor_id:String})))`,
+        );
         const ts = new Date(cursorInfo.timestamp);
         params.cursor_ts = ts.toISOString().replace("T", " ").replace("Z", "");
+        params.cursor_id = cursorInfo.id;
     }
 
     let attrIndex = 0;
